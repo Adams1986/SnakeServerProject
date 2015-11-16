@@ -618,6 +618,7 @@ public class DatabaseWrapper {
                 game.setHost(host);
                 game.setOpponent(opponent);
                 game.getHost().setControls(resultSet.getString("host_controls"));
+                game.getOpponent().setControls(resultSet.getString("opponent_controls"));
                 game.setCreated(resultSet.getDate("created"));
                 game.setName(resultSet.getString("name"));
 
