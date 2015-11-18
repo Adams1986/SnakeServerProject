@@ -1,0 +1,10 @@
+{
+	"host": "localhost",
+	"port": "3306",
+	"username": "root",
+	"password": "",
+	"dbname": "dbcon",
+	"hashingsalt": "123456",
+	"encryptionkey": "123456",
+	"serverport": 8888
+}
