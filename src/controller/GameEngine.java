@@ -30,13 +30,15 @@ public class GameEngine {
         boolean hostDidCrash = false;
         int hostScore = 0;
         int hostKills = 0;
-        int hostX = 0;
+        //x set to -1 and y to 1 to match up with client game engine
+        int hostX = -1;
         int hostY = 1;
 
         // The game variables for the opponent:
         boolean opponentDidCrash = false;
         int opponentScore = 0;
-        int opponentX = 0;
+        //x set to 1 and y to -1 to match up with client game engine
+        int opponentX = 1;
         int opponentY = -1;
         int opponentKills = 0;
 

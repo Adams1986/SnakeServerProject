@@ -57,7 +57,7 @@ public class Security {
      * @param key
      * @return
      */
-        public String encrypt(String message, String key){
+        public static String encrypt(String message, String key){
             try {
                 if (message==null || key==null ) return null;
 
@@ -89,7 +89,7 @@ public class Security {
      * @param key
      * @return
      */
-    public String decrypt(String message, String key){
+    public static String decrypt(String message, String key){
         try {
             if (message==null || key==null ) return null;
             BASE64Decoder decoder = new BASE64Decoder();

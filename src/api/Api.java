@@ -76,15 +76,16 @@ public class Api {
     }
 
     @GET //"GET-request"
-    @Path("/users/") //USER-path - identifice det inden for metoden
+    @Path("/users/{userid}") //USER-path - identifice det inden for metoden
     @Produces("application/json")
-    public Response getAllUsers() {
+    public Response getAllUsers(@PathParam("userid") int userId) {
 
-        ArrayList<User> users = Logic.getUsers();
+        //TODO change maybe?
+        //ArrayList<User> users = Logic.getUsers();
 
         return Response
                 .status(200)
-                .entity(new Gson().toJson(users))
+                .entity(Logic.getEncryptedUsers(userId))
                 .header("Access-Control-Allow-Origin", "*")
                 .build();
     }
@@ -153,7 +154,7 @@ public class Api {
                 case 3:
                     return Response
                             .status(400)
-                            .entity("{\"message\":\"Invalid email. Must contain @ and .com/.dk/.net or equivalent")
+                            .entity("{\"message\":\"Invalid email. Must contain @ and .com/.dk/.net or equivalent\"}")
                             .build();
                 default:
                     return Response
@@ -172,7 +173,7 @@ public class Api {
     }
 
     @GET //"GET-request"
-    @Path("/users/{userId}")
+    @Path("/users/id/{userId}")
     @Produces("application/json")
     // JSON: {"userId": [userid]}
     public Response getUser(@PathParam("userId") int userId) {
@@ -182,7 +183,7 @@ public class Api {
         if (user != null) {
             return Response
                     .status(200)
-                    .entity(new Gson().toJson(user))
+                    .entity(Logic.getEncryptedDto(user))
                     .header("Access-Control-Allow-Origin", "*")
                     .build();
         } else {
@@ -328,6 +329,20 @@ public class Api {
 
     }
 
+    @GET
+    @Path("/highscores")
+    @Produces("application/json")
+    public Response getHighScores(){
+
+        ArrayList<Score> highScores = Logic.getHighScores();
+
+        return Response
+                .status(200)
+                .entity(new Gson().toJson(highScores))
+                .header("Access-Control-Allow-Origin", "*")
+                .build();
+    }
+
     /*
     Getting games by userid
      */
@@ -339,7 +354,7 @@ public class Api {
         ArrayList<Game> games = Logic.getGames(DatabaseWrapper.GAMES_BY_ID, userId);
 
         return Response
-                .status(201)
+                .status(200)
                 .entity(new Gson().toJson(games))
                 .header("Access-Control-Allow-Origin", "*")
                 .build();

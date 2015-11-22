@@ -203,6 +203,11 @@ public class DatabaseDriver {
         return "select games.id as game_id, games.created, games.opponent, games.name as game_name, scores.id as score_id, scores.user_id as user_id, max(scores.score) as highscore, users.first_name, users.last_name, users.username from scores, users, games where scores.user_id = users.id and scores.game_id = games.id group by user_id order by highscore desc";
     }
 
+    public String getSQLHighScores(){
+
+        return "SELECT username, score, game_id, name, host_controls, opponent_controls FROM scores INNER JOIN games ON game_id = games.id INNER JOIN users ON user_id = users.id ORDER BY score DESC LIMIT 25;";
+    }
+
     //Used for returning a specific users finished games with scores
     public String getSQLAllFinishedGamesByUserID() {
         return "select games.id, games.name, users.username as opponent_name, users.first_name as opponent_first_name, users.last_name as opponent_last_name, users.id as opponent_id, scores.score, games.winner from scores, games, users where scores.user_id = ? and games.id = scores.game_id and scores.opponent_id = users.id";

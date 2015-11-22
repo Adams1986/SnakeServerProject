@@ -1,16 +1,15 @@
 package controller;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.gson.Gson;
 import database.DatabaseWrapper;
-import model.Game;
-import model.Gamer;
-import model.Score;
-import model.User;
+import model.*;
 
 
 /**
@@ -28,10 +27,16 @@ public class Logic {
      *
      * @return ArrayList of users
      */
+    public static String getEncryptedUsers(int userId) {
+
+        // Define ArrayList to be used to add users and return them.
+        return getEncryptedListOfDto(db.getUsers(userId));
+    }
+
     public static ArrayList<User> getUsers() {
 
         // Define ArrayList to be used to add users and return them.
-        return db.getUsers();
+        return db.getUsers(-1);
     }
 
     /**
@@ -43,7 +48,7 @@ public class Logic {
     public static int createUser(User user) {
 
         //Email checker
-        Pattern pattern = Pattern.compile("^[_a-zA-Z0-9]{2,}+@[_a-zA-Z0-9]{2,}\\.[_a-zA-Z0-9]{2,4}");
+        Pattern pattern = Pattern.compile("^[_a-zA-Z0-9\\.]{2,}+@[_a-zA-Z0-9\\.]{2,}\\.[_a-zA-Z0-9]{2,4}");
         Matcher matcher = pattern.matcher(user.getEmail());
 
         if (matcher.matches()) {
@@ -99,20 +104,24 @@ public class Logic {
      * @return hashMap with user type, error/succes code, userid
      */
     public static HashMap authenticateUser(String username, String password) {
-        User user;
+
         HashMap <String, Integer> hashMap = new HashMap();
-        user = db.getUserByUsername(username);
+        User user = db.getUserByUsername(username);
+
         if (user == null) {
             // User does not exists.
             hashMap.put("code", 0);
-        } else {
+        }
+        else {
             hashMap.put("usertype", user.getType());
+
             if (password.equals(user.getPassword())) {
                 // Return 2 if user exists and password is correct. Success.
                 hashMap.put("code", 2);
                 hashMap.put("userid", user.getId());
 
-            } else {
+            }
+            else {
                 //Return 1 if user exists but password is wrong.
                 hashMap.put("code", 1);
             }
@@ -274,8 +283,30 @@ public class Logic {
         return db.getHighscore();
     }
 
+    public static ArrayList<Score> getHighScores(){
+
+        return db.getHighScores();
+    }
+
 
     public static ArrayList<Score> getScoresByUserID(int userId) {
         return db.getScoresByUserID(userId);
+    }
+
+    //TODO: find suitable place
+    public static String getEncryptedDto(Object o){
+
+        HashMap<String, String> encryptedDto = new HashMap<>();
+        encryptedDto.put("data", Security.encrypt(new Gson().toJson(o), Config.getEncryptionkey()));
+
+        return new Gson().toJson(encryptedDto);
+    }
+
+    public static String getEncryptedListOfDto(ArrayList<User> list){
+
+        HashMap<String, String> encryptedList = new HashMap<>();
+        encryptedList.put("data", Security.encrypt(new Gson().toJson(list), Config.getEncryptionkey()));
+
+        return new Gson().toJson(encryptedList);
     }
 }

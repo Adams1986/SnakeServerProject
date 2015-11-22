@@ -199,7 +199,7 @@ public class DatabaseWrapper {
      *
      * @return
      */
-    public ArrayList<User> getUsers() {
+    public ArrayList<User> getUsers(int userId) {
         ResultSet resultSet = null;
         PreparedStatement ps;
         User user = null;
@@ -217,18 +217,23 @@ public class DatabaseWrapper {
 
                 if (!resultSet.getString("status").equals("deleted") &&
                         resultSet.getType()!=0) {
-                    user = new User();
 
-                    user.setId(resultSet.getInt("id"));
-                    user.setFirstName(resultSet.getString("first_name"));
-                    user.setLastName(resultSet.getString("last_name"));
-                    user.setEmail(resultSet.getString("email"));
-                    user.setUsername(resultSet.getString("username"));
-                    user.setCreated(resultSet.getDate("created"));
-                    user.setStatus(resultSet.getString("status"));
-                    user.setType(resultSet.getInt("type"));
+                    //userId allows getUsers to be used by client to invite other users without showing on list
+                    if (userId != resultSet.getInt("id")) {
 
-                    result.add(user);
+                        user = new User();
+
+                        user.setId(resultSet.getInt("id"));
+                        user.setFirstName(resultSet.getString("first_name"));
+                        user.setLastName(resultSet.getString("last_name"));
+                        user.setEmail(resultSet.getString("email"));
+                        user.setUsername(resultSet.getString("username"));
+                        user.setCreated(resultSet.getDate("created"));
+                        user.setStatus(resultSet.getString("status"));
+                        user.setType(resultSet.getInt("type"));
+
+                        result.add(user);
+                    }
                 }
             }
 
@@ -444,12 +449,12 @@ public class DatabaseWrapper {
 
             createUser.executeUpdate();
         } catch(MySQLIntegrityConstraintViolationException m){
-            m.printStackTrace();
+
             return false;
         }
         catch (SQLException sqlException)
         {
-            sqlException.printStackTrace();
+
             dbDriver.close();
             return false;
 
@@ -667,6 +672,61 @@ public class DatabaseWrapper {
         return user;
     }
 
+    public ArrayList<Score> getHighScores(){
+
+        ResultSet resultSet = null;
+        PreparedStatement ps;
+        ArrayList<Score> result = null;
+
+
+        try {
+            result = new ArrayList<>();
+
+            ps = connection.prepareStatement(dbDriver.getSQLHighScores());
+            resultSet = ps.executeQuery();
+
+            while (resultSet.next()){
+
+                Gamer winner = new Gamer();
+                winner.setUsername(resultSet.getString("username"));
+
+                Gamer host = new Gamer();
+                host.setControls(resultSet.getString("host_controls"));
+
+                Gamer opponent = new Gamer();
+                opponent.setControls(resultSet.getString("opponent_controls"));
+
+                // Adding Game object
+                Game game = new Game();
+                game.setName(resultSet.getString("name"));
+                game.setGameId(resultSet.getInt("game_id"));
+
+                Score score = new Score();
+                score.setGame(game);
+                score.getGame().setWinner(winner);
+                score.getGame().setHost(host);
+                score.getGame().setOpponent(opponent);
+                score.setGame(game);
+                score.setScore(resultSet.getInt("score"));
+
+                result.add(score);
+            }
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                resultSet.close();
+            }
+            catch (SQLException ex) {
+                ex.printStackTrace();
+                dbDriver.close();
+            }
+        }
+
+        return result;
+    }
 
     public ArrayList<Gamer> getScore() {
         ResultSet resultSet = null;
