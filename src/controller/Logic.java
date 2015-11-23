@@ -1,7 +1,6 @@
 package controller;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -111,6 +110,7 @@ public class Logic {
         if (user == null) {
             // User does not exists.
             hashMap.put("code", 0);
+            hashMap.put("usertype", -1);
         }
         else {
             hashMap.put("usertype", user.getType());
@@ -184,6 +184,15 @@ public class Logic {
                 //Used for showing all open games, when a user wants to join a game
                 //Is getting set to 0 in TUI class because this method doesn't return games by user ID
                 games = db.getGames(DatabaseWrapper.ALL_GAMES, userId);
+                break;
+            case DatabaseWrapper.PENDING_AND_OPEN_GAMES_BY_ID:
+                //Used for showing both open and pending games by user id.
+                games = db.getGames(DatabaseWrapper.PENDING_AND_OPEN_GAMES_BY_ID, userId);
+                break;
+            case DatabaseWrapper.OPEN_GAMES_BY_OTHER_USERS:
+                //Used for showing open games from other users. User logged on and playing can select from this list
+                //and join the game
+                games = db.getGames(DatabaseWrapper.OPEN_GAMES_BY_OTHER_USERS, userId);
                 break;
         }
         return games;

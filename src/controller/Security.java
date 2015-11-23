@@ -28,13 +28,13 @@ public class Security {
         try {
             digester = MessageDigest.getInstance("SHA-256");
         }
-        catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+        catch (NoSuchAlgorithmException | NullPointerException e) {
+
         }
 
-        if (input == null || input.length() == 0) {
-            throw new IllegalArgumentException("String to encript cannot be null or zero length");
-        }
+//        if (input == null || input.length() == 0) {
+//            throw new IllegalArgumentException("String to encript cannot be null or zero length");
+//        }
 
         digester.update(inputhash.getBytes());
         byte[] hash = digester.digest();

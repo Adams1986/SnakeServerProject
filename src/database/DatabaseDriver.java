@@ -179,6 +179,11 @@ public class DatabaseDriver {
         return "select * from games WHERE status = 'open'";
     }
 
+    public String getSQLOpenGamesByOtherUsers(){
+
+        return "SELECT * FROM Games WHERE status = 'open' AND host != ?";
+    }
+
     public String getSQLGamesInvitedByUserID() {
         return "select * from games WHERE status = 'pending' and opponent = ?";
     }
@@ -199,6 +204,7 @@ public class DatabaseDriver {
     public String getScoresByUserID() {
         return " select * from scores where user_id = ?";
     }
+
     public String getHighScore() {
         return "select games.id as game_id, games.created, games.opponent, games.name as game_name, scores.id as score_id, scores.user_id as user_id, max(scores.score) as highscore, users.first_name, users.last_name, users.username from scores, users, games where scores.user_id = users.id and scores.game_id = games.id group by user_id order by highscore desc";
     }
@@ -211,6 +217,11 @@ public class DatabaseDriver {
     //Used for returning a specific users finished games with scores
     public String getSQLAllFinishedGamesByUserID() {
         return "select games.id, games.name, users.username as opponent_name, users.first_name as opponent_first_name, users.last_name as opponent_last_name, users.id as opponent_id, scores.score, games.winner from scores, games, users where scores.user_id = ? and games.id = scores.game_id and scores.opponent_id = users.id";
+    }
+
+    public String getSQLPendingAndOpenGamesByStatusAndUserID(){
+
+        return "SELECT * FROM games WHERE host = ? AND (status = 'open' OR status = 'pending');";
     }
 
 }

@@ -65,7 +65,7 @@ public class Api {
             }
 
         } catch (JsonSyntaxException | NullPointerException e) {
-            e.printStackTrace();
+
             return Response
                     .status(400)
                     .entity("{\"message\":\"Error in JSON\"}")
@@ -378,6 +378,12 @@ public class Api {
                 break;
             case "finished":
                 games = Logic.getGames(DatabaseWrapper.COMPLETED_BY_ID, userId);
+                break;
+            case "openandpending":
+                games = Logic.getGames(DatabaseWrapper.PENDING_AND_OPEN_GAMES_BY_ID, userId);
+                break;
+            case "openfromotherusers":
+                games = Logic.getGames(DatabaseWrapper.OPEN_GAMES_BY_OTHER_USERS, userId);
                 break;
         }
 

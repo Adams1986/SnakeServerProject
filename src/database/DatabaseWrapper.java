@@ -29,6 +29,8 @@ public class DatabaseWrapper {
     public static final int COMPLETED_BY_ID = 5;
     public static final int OPEN_GAMES = 6;
     public static final int ALL_GAMES = 7;
+    public static final int PENDING_AND_OPEN_GAMES_BY_ID = 8;
+    public static final int OPEN_GAMES_BY_OTHER_USERS = 9;
     //used for switch in updateGame
     public static final int JOIN_GAME = 0;
     public static final int FINISH_GAME = 1;
@@ -593,6 +595,14 @@ public class DatabaseWrapper {
                     break;
                 case ALL_GAMES:
                     ps = connection.prepareStatement(dbDriver.getSqlRecords("games"));
+                    break;
+                case PENDING_AND_OPEN_GAMES_BY_ID:
+                    ps = connection.prepareStatement(dbDriver.getSQLPendingAndOpenGamesByStatusAndUserID());
+                    ps.setInt(1, id);
+                    break;
+                case OPEN_GAMES_BY_OTHER_USERS:
+                    ps = connection.prepareStatement(dbDriver.getSQLOpenGamesByOtherUsers());
+                    ps.setInt(1, id);
                     break;
 
             }
