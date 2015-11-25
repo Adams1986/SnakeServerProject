@@ -616,18 +616,22 @@ public class DatabaseWrapper {
                 // Creating Gamer object (host)
                 Gamer host = new Gamer();
                 host.setId(resultSet.getInt("host"));
+                host.setUsername(resultSet.getString("host_username"));
 
                 // Creating Gamer object (opponent)
                 Gamer opponent = new Gamer();
                 opponent.setId(resultSet.getInt("opponent"));
+                opponent.setUsername(resultSet.getString("opponent_username"));
 
                 // Creating Gammer object (winner)
                 Gamer winner = new Gamer();
                 winner.setId(resultSet.getInt("winner"));
+                if (type == COMPLETED_BY_ID)
+                winner.setUsername(resultSet.getString("winner_username"));
 
                 // Creating Game object (game)
                 Game game = new Game();
-                game.setGameId(resultSet.getInt("id"));
+                game.setGameId(resultSet.getInt("games.id"));
                 // Adding host, opponent, winner objects to our game object
                 game.setWinner(winner);
                 game.setHost(host);
@@ -637,7 +641,7 @@ public class DatabaseWrapper {
                 game.setCreated(resultSet.getDate("created"));
                 game.setName(resultSet.getString("name"));
 
-                game.setStatus(resultSet.getString("status"));
+                game.setStatus(resultSet.getString("games.status"));
                 game.setMapSize(resultSet.getInt("map_size"));
 
                 result.add(game);

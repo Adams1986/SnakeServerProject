@@ -125,6 +125,7 @@ public class DatabaseDriver {
         return "select * from " + table;
     }
 
+
     /**
      * Querybuilder with seven parameters, which, when specified will update the value of the shown columns in the 'users' table
      * @return SqlStatement
@@ -168,28 +169,30 @@ public class DatabaseDriver {
     }
 
     public String getSQLAllGamesByUserID() {
-        return "select * from games where host = ? OR opponent = ?";
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host INNER JOIN users opponents ON opponents.id = opponent WHERE host = ? OR opponent = ?;";
     }
 
     public String getSQLGamesByStatusAndUserID(){
-        return "SELECT * FROM Games WHERE status = ? AND (host = ? OR opponent = ?)";
+
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username, winners.username AS winner_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent LEFT OUTER JOIN users winners ON winners.id = winner WHERE games.status = ? AND (host = ? OR opponent = ?);";
+        //return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE games.status = ? AND (host = ? OR opponent = ?);";
     }
 
     public String getSQLOpenGames() {
-        return "select * from games WHERE status = 'open'";
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE games.status = 'open'";
     }
 
     public String getSQLOpenGamesByOtherUsers(){
 
-        return "SELECT * FROM Games WHERE status = 'open' AND host != ?";
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM Games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE games.status = 'open' AND host != ?";
     }
 
     public String getSQLGamesInvitedByUserID() {
-        return "select * from games WHERE status = 'pending' and opponent = ?";
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host INNER JOIN users opponents ON opponents.id = opponent WHERE games.status = 'pending' and opponent = ?";
     }
 
     public String getSQLGamesHostedByUserID(){
-        return "SELECT * FROM Games WHERE status = 'pending' AND host = ?";
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE games.status != 'finished' AND host = ?";
     }
 
     public String authenticatedSql() {
@@ -221,7 +224,7 @@ public class DatabaseDriver {
 
     public String getSQLPendingAndOpenGamesByStatusAndUserID(){
 
-        return "SELECT * FROM games WHERE host = ? AND (status = 'open' OR status = 'pending');";
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE host = ? AND (games.status = 'open' OR games.status = 'pending');";
     }
 
 }

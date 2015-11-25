@@ -18,6 +18,7 @@ import javax.ws.rs.core.Response;
 @Path("/api")
 public class Api {
 
+    //TODO: rewrite this! does not need the 'huge' switch. Default is enough
     @POST //"POST-request" er ny data vi kan indtaste for at logge ind.
     @Path("/login/")
     @Produces("application/json")
