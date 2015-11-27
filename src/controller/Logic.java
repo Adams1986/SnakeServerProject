@@ -303,7 +303,7 @@ public class Logic {
         return db.getScoresByUserID(userId);
     }
 
-    //TODO: find suitable place
+    //TODO: find suitable place. Maybe make a parser class like on client
     public static String getEncryptedDto(Object o){
 
         HashMap<String, String> encryptedDto = new HashMap<>();
