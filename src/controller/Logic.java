@@ -104,6 +104,7 @@ public class Logic {
      */
     public static HashMap authenticateUser(String username, String password) {
 
+
         HashMap <String, Integer> hashMap = new HashMap();
         User user = db.getUserByUsername(username);
 
@@ -309,6 +310,25 @@ public class Logic {
         encryptedDto.put("data", Security.encrypt(new Gson().toJson(o), Config.getEncryptionkey()));
 
         return new Gson().toJson(encryptedDto);
+    }
+
+    public static User getDecryptedUser(String jsonData){
+
+        //creating the gson-parser
+        Gson gson = new Gson();
+
+        //use parser to parse json data into a hash map
+        HashMap<String, String> jsonHashMap = gson.fromJson(jsonData, HashMap.class);
+
+        //get the value from the key "data" in the hash map
+        String encryptedUser = jsonHashMap.get("data");
+
+        //decrypt the value inside "data" key, using the Security.decrypt method
+        String jsonUser = Security.decrypt(encryptedUser, Config.getEncryptionkey());
+
+        //return the decrypted value as a user object, using the gson method fromJson
+        return gson.fromJson(jsonUser, User.class);
+
     }
 
     public static String getEncryptedListOfDto(ArrayList<User> list){

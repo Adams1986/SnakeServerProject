@@ -26,7 +26,8 @@ public class Api {
 
         try {
 
-            User user = new Gson().fromJson(data, User.class);
+            //Decrypt user
+            User user = Logic.getDecryptedUser(data);
             user.setPassword(Security.hashing(user.getPassword()));
 
             HashMap <String, Integer> hashMap = Logic.authenticateUser(user.getUsername(), user.getPassword());

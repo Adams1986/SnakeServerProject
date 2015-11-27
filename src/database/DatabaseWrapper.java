@@ -616,12 +616,15 @@ public class DatabaseWrapper {
                 // Creating Gamer object (host)
                 Gamer host = new Gamer();
                 host.setId(resultSet.getInt("host"));
-                host.setUsername(resultSet.getString("host_username"));
 
                 // Creating Gamer object (opponent)
                 Gamer opponent = new Gamer();
                 opponent.setId(resultSet.getInt("opponent"));
-                opponent.setUsername(resultSet.getString("opponent_username"));
+
+                if(type != ALL_GAMES) {
+                    opponent.setUsername(resultSet.getString("opponent_username"));
+                    host.setUsername(resultSet.getString("host_username"));
+                }
 
                 // Creating Gammer object (winner)
                 Gamer winner = new Gamer();
