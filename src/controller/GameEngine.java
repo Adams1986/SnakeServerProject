@@ -1,7 +1,10 @@
 package controller;
 import javafx.util.Pair;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import model.Game;
 import model.Gamer;
@@ -12,15 +15,35 @@ import model.Gamer;
  */
 public class GameEngine {
 
+    private int hostX = -1;
+    private int hostY = 1;
+    private int opponentX = 1;
+    private int opponentY = -1;
 
-    public static Map playGame(Game game){
+
+    public Map playGame(Game game){
         Gamer host = game.getHost();
         Gamer opponent = game.getOpponent();
         Map gamers = new HashMap();
         String hostControls = host.getControls();
         String opponentControls = opponent.getControls();
 
-        String turn = Math.round(Math.random() * 1) == 0 ? "host" : "opponent";
+        String turn;
+
+        /*Algorithm for determining who gets the head start in the game. E.g. if host has 80 and opponent 800
+        host will have about a 9-1 or 1/10 chance of getting the turn
+         */
+        int hostTotal = host.getTotalScore()+1;
+        int opponentTotal = opponent.getTotalScore()+1;
+        boolean higherScore = hostTotal > opponentTotal;
+        int noOfOutComes = hostTotal > opponentTotal ? (hostTotal + opponentTotal) / opponentTotal : (opponentTotal + hostTotal) / hostTotal;
+        int dictatingNumber = new Random().nextInt(noOfOutComes);
+
+        if (higherScore) {
+            turn = dictatingNumber < (hostTotal / opponentTotal) ? "host" : "opponent";
+        } else {
+            turn = dictatingNumber < (opponentTotal / hostTotal) ? "opponent" : "host";
+        }
 
         // Split each controls string into a character array:
         char[] hostControlCharacters = hostControls.toCharArray();
@@ -31,15 +54,11 @@ public class GameEngine {
         int hostScore = 0;
         int hostKills = 0;
         //x set to -1 and y to 1 to match up with client game engine
-        int hostX = -1;
-        int hostY = 1;
 
         // The game variables for the opponent:
         boolean opponentDidCrash = false;
         int opponentScore = 0;
         //x set to 1 and y to -1 to match up with client game engine
-        int opponentX = 1;
-        int opponentY = -1;
         int opponentKills = 0;
 
         // Playing field options:
@@ -56,7 +75,7 @@ public class GameEngine {
         for (int i = 0; i < hostControls.length(); i++) {
             char move = hostControlCharacters[i];
 
-            Map coordinates = gameMove(move, hostX, hostY);
+            Map coordinates = gameMove(move);
 
             hostMoves[i] = new int[]{(int) coordinates.get('x'), (int) coordinates.get('y')};
         }
@@ -65,7 +84,7 @@ public class GameEngine {
         for (int i = 0; i < opponentControls.length(); i++) {
             char move = opponentControlCharacters[i];
 
-            Map coordinates = gameMove(move, opponentX, opponentY);
+            Map coordinates = gameMoveOpponent(move);
 
             opponentMoves[i] = new int[]{(int) coordinates.get('x'), (int) coordinates.get('y')};
         }
@@ -81,10 +100,14 @@ public class GameEngine {
                     hostKills++;
 
                     opponentDidCrash = true;
+                    //changing controls to the place where opponent dies to eliminate confusion
+                    game.getOpponent().setControls(game.getOpponent().getControls().substring(0, i));
                 } else {
                     opponentKills++;
 
                     hostDidCrash = true;
+                    //changing controls to the place where host dies to eliminate confusion
+                    game.getHost().setControls(game.getHost().getControls().substring(0, i));
                 }
 
             }
@@ -144,25 +167,48 @@ public class GameEngine {
 
     }
 
-    private static Map gameMove(char move, int x, int y) {
+    private Map gameMove(char move) {
 
         //Create a HashMap in order to store the coordinates.
         Map newCoordinates = new HashMap();
 
         //Calculate the new X,Y coordinates based on the char from the user.
         if (move == 'a') {
-            x--;
+            hostX--;
         } else if (move == 'd') {
-            x++;
+            hostX++;
         } else if (move == 'w') {
-            y++;
+            hostY++;
         } else if (move == 's') {
-            y--;
+            hostY--;
         }
 
         //Put the newly calculated coordinates into the HashMap in order to return it.
-        newCoordinates.put('x', x);
-        newCoordinates.put('y', y);
+        newCoordinates.put('x', hostX);
+        newCoordinates.put('y', hostY);
+
+        //Return the coordinates back in order to use it.
+        return newCoordinates;
+    }
+    private Map gameMoveOpponent(char move) {
+
+        //Create a HashMap in order to store the coordinates.
+        Map newCoordinates = new HashMap();
+
+        //Calculate the new X,Y coordinates based on the char from the user.
+        if (move == 'a') {
+            opponentX--;
+        } else if (move == 'd') {
+            opponentX++;
+        } else if (move == 'w') {
+            opponentY++;
+        } else if (move == 's') {
+            opponentY--;
+        }
+
+        //Put the newly calculated coordinates into the HashMap in order to return it.
+        newCoordinates.put('x', opponentX);
+        newCoordinates.put('y', opponentY);
 
         //Return the coordinates back in order to use it.
         return newCoordinates;

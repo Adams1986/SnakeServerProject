@@ -29,13 +29,12 @@ public class DatabaseDriver {
      */
     public DatabaseDriver()
     {
-        try
-        {
-            connection = DriverManager.getConnection(sqlUrl, sqlUser, sqlPassword);
+        try {
 
+            connection = DriverManager.getConnection(sqlUrl, sqlUser, sqlPassword);
         }
-        catch (SQLException e)
-        {
+        catch (SQLException e) {
+
             e.printStackTrace();
             System.exit(1);
         }
@@ -45,60 +44,16 @@ public class DatabaseDriver {
         return connection;
     }
 
-//    public static void checkConnection() {
-//
-//        try {
-//            connection = DriverManager.getConnection(sqlUrl, sqlUser, sqlPassword);
-//
-//            if (connection.isValid(1000)) {
-//                System.out.println("You are connected");
-//
-//            } else {
-//                System.out.println("Connection lost");
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            System.exit(1);
-//        }
-//
-//    }
-//
-//
-//
-//    /**
-//     * Checks if the database exists or not
-//     * @return bool
-//     * @throws SQLException
-//     */
-//
-//    public static boolean DbExist() throws SQLException {
-//
-//        ResultSet resultSet = connection.getMetaData().getCatalogs();
-//        while (resultSet.next()) {
-//            String databaseName = resultSet.getString(1);
-//
-//            if (databaseName.equals(dbName)) {
-//                return true;
-//
-//            } else {
-//                doQuery("Indsæt SQL dump");
-//            }
-//        }
-//
-//        return false;
-//    }
-
     /**
      * Method used to close to DB connection
      */
+    public void close() {
 
-    public void close()
-    {
         try{
             connection.close();
         }
-        catch(SQLException e)
-        {
+        catch(SQLException e) {
+
             e.printStackTrace();
         }
     }
@@ -108,8 +63,12 @@ public class DatabaseDriver {
      * @param table
      * @return SqlStatement
      */
-
     public String getSqlRecord(String table) {
+
+        return "select * from " + table + " WHERE id = ? AND status <> 'deleted'";
+    }
+
+    public String getSqlRecordWithHighScore(String table) {
 
         return "select * from " + table + " WHERE id = ? AND status <> 'deleted'";
     }
@@ -119,12 +78,10 @@ public class DatabaseDriver {
      * @param table
      * @return SqlStatement
      */
-
     public String getSqlRecords(String table) {
 
         return "select * from " + table;
     }
-
 
     /**
      * Querybuilder with seven parameters, which, when specified will update the value of the shown columns in the 'users' table
@@ -134,7 +91,7 @@ public class DatabaseDriver {
         return "UPDATE Users SET first_name = ?, last_name = ?, email = ?, password = ?, " +
                 "status = ?, type = ? WHERE id = ?";
     }
-    //
+
     /**
      * Querybuilder with seven parameters, which, when specified will update the value of the shown columns in the 'games' table
      * @return SqlStatement
@@ -144,7 +101,7 @@ public class DatabaseDriver {
             case JOIN:
                 return "UPDATE Games SET status = ?, opponent = ? WHERE id = ?";
             case FINISHED:
-                return "UPDATE Games SET status = ?, winner = ?, opponent_controls = ? WHERE id = ?";
+                return "UPDATE Games SET status = ?, winner = ?, host_controls = ?, opponent_controls = ? WHERE id = ?";
         }
         return null;
     }

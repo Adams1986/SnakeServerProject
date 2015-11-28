@@ -108,10 +108,12 @@ public class DatabaseWrapper {
                 Gamer host = new Gamer();
                 host.setId(resultSet.getInt("host"));
                 host.setControls(resultSet.getString("host_controls"));
+                //host.setTotalScore(resultSet.getInt("host_total_score"));
 
                 Gamer opponent = new Gamer();
                 opponent.setId(resultSet.getInt("opponent"));
                 opponent.setControls(resultSet.getString("opponent_controls"));
+                //opponent.setTotalScore(resultSet.getInt("opponent_total_score"));
 
                 Gamer winner = new Gamer();
                 winner.setId(resultSet.getInt("winner"));
@@ -201,11 +203,11 @@ public class DatabaseWrapper {
      *
      * @return
      */
-    public ArrayList<User> getUsers(int userId) {
+    public ArrayList<Gamer> getUsers(int userId) {
         ResultSet resultSet = null;
         PreparedStatement ps;
-        User user = null;
-        ArrayList<User> result = null;
+        Gamer user = null;
+        ArrayList<Gamer> result = null;
 
         try {
             ps = connection.prepareStatement(dbDriver.getSqlRecords("users"));
@@ -223,7 +225,7 @@ public class DatabaseWrapper {
                     //userId allows getUsers to be used by client to invite other users without showing on list
                     if (userId != resultSet.getInt("id")) {
 
-                        user = new User();
+                        user = new Gamer();
 
                         user.setId(resultSet.getInt("id"));
                         user.setFirstName(resultSet.getString("first_name"));
@@ -233,6 +235,19 @@ public class DatabaseWrapper {
                         user.setCreated(resultSet.getDate("created"));
                         user.setStatus(resultSet.getString("status"));
                         user.setType(resultSet.getInt("type"));
+
+                        //TODO: fix this
+                        if (userId != -1){
+                            ArrayList<Gamer> gamersTotalScore = getScore();
+
+                            for (Gamer g : gamersTotalScore) {
+
+                                if (g.getId() ==user.getId()){
+
+                                    user.setTotalScore(g.getTotalScore());
+                                }
+                            }
+                        }
 
                         result.add(user);
                     }
@@ -420,8 +435,9 @@ public class DatabaseWrapper {
                         ps = connection.prepareStatement(dbDriver.updateSqlGame(DatabaseDriver.FINISHED));
                         ps.setString(1, game.getStatus());
                         ps.setInt(2, game.getWinner().getId());
-                        ps.setString(3, game.getOpponent().getControls());
-                        ps.setInt(4, game.getGameId());
+                        ps.setString(3, game.getHost().getControls());
+                        ps.setString(4, game.getOpponent().getControls());
+                        ps.setInt(5, game.getGameId());
                         ps.executeUpdate();
                         return 1;
                     }
@@ -450,7 +466,8 @@ public class DatabaseWrapper {
             createUser.setInt(6, user.getType());
 
             createUser.executeUpdate();
-        } catch(MySQLIntegrityConstraintViolationException m){
+        }
+        catch (MySQLIntegrityConstraintViolationException m){
 
             return false;
         }
@@ -630,7 +647,7 @@ public class DatabaseWrapper {
                 Gamer winner = new Gamer();
                 winner.setId(resultSet.getInt("winner"));
                 if (type == COMPLETED_BY_ID)
-                winner.setUsername(resultSet.getString("winner_username"));
+                    winner.setUsername(resultSet.getString("winner_username"));
 
                 // Creating Game object (game)
                 Game game = new Game();

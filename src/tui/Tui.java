@@ -6,6 +6,7 @@ import controller.Logic;
 import controller.Security;
 import database.DatabaseWrapper;
 import model.Game;
+import model.Gamer;
 import model.User;
 
 public class Tui {
@@ -41,16 +42,12 @@ public class Tui {
 
         HashMap <String, Integer> hashMap = Logic.authenticateUser(enterUsername(), Security.hashing(enterPassword()));
 
-        if (hashMap.get("usertype") == 1) {
-            hashMap.put("code", 0);
-        }
-
         int code = hashMap.get("code");
-        if (code == 0)
-            miscOut("User does not exist.");
+        if (code == 2)
+            miscOut("Admin does not exist.");
         else if (code == 1) {
             miscOut("Wrong password.");
-        } else if (code == 2) {
+        } else if (code == 0) {
             miscOut("Success.");
             adminIsAuthenticated = true;
             userMenu();
@@ -72,12 +69,12 @@ public class Tui {
                     break;
                 case 2:
                     miscOut("User List: ");
-                    ArrayList<User> userList = Logic.getUsers();
+                    ArrayList<Gamer> userList = Logic.getUsers();
                     listUsers(userList);
                     break;
                 case 3:
                     miscOut("Create User: ");
-                    Logic.createUser(createUser());
+                    createUser();
                     break;
                 case 4:
                     miscOut("Delete User: ");
@@ -107,7 +104,7 @@ public class Tui {
         return input.nextInt();
     }
 
-    public static void listUsers(ArrayList<User> userList) {
+    public static void listUsers(ArrayList<Gamer> userList) {
 
         for (User user : userList) {
             System.out.println("Id: " + user.getId() + "\tUser: " + user.getUsername() + "\tStatus: " + user.getStatus());
@@ -117,13 +114,14 @@ public class Tui {
     public static void listGames(ArrayList<Game> gameList) {
 
         for (Game game : gameList) {
-            System.out.println("GameId: " + game.getGameId() + "\tHostId: " + game.getHost().getId() + "\tOpponentId: " + game.getOpponent().getId() + "\tWinner: " + game.getWinner().getId());
+
+            System.out.println("GameId: " + game.getGameId() + "\tHostId: " + game.getHost().getId() + "\tOpponentId: "
+                    + game.getOpponent().getId() + "\tWinner: " + game.getWinner().getId());
         }
     }
 
-    public static User createUser() {
+    public static void createUser() {
 
-        //TODO: This should work! - DONE
         User usr = new User();
         usr.setFirstName(enterFirstName());
         usr.setLastName(enterLastName());
@@ -132,7 +130,21 @@ public class Tui {
         usr.setPassword(enterPassword());
         usr.setType(enterUserType());
 
-        return usr;
+        int succesCode = Logic.createUser(usr);
+
+        switch (succesCode){
+            case 0:
+                System.out.println("User was created");
+                break;
+            /*setting up for possible extra info for admin. For now assume admin knows standards for creating a user,
+            e.g. requirements for password, email etc
+             */
+            case 1:
+            case 2:
+            case 3:
+                System.out.println("User was not created");
+                break;
+        }
     }
 
 
@@ -146,47 +158,42 @@ public class Tui {
     public static String enterUsername() {
 
         System.out.print("Please enter username: "); // Brugeren bliver spurgt om username
-        String username = input.next();
 
-        return username;
+        return input.next();
     }
 
     public static String enterPassword() {
 
         System.out.print("Please enter password: "); // Brugeren bliver spurgt om password
-        String password = input.next();
 
-        return password;
+        return input.next();
     }
 
     public static String enterFirstName() {
         System.out.print("Please enter first name: "); // Brugeren bliver spurgt om fornavn
-        String firstName = input.next();
 
-        return firstName;
+        return input.next();
     }
 
     public static String enterLastName() {
         System.out.print("Please enter last name: "); // Brugeren bliver spurgt om efternavn
-        String lastName = input.next();
 
-        return lastName;
+        return input.next();
     }
 
     public static String enterEmail() {
         System.out.print("Please enter email: "); // Brugeren bliver spurgt om email
-        String email = input.next();
 
-        return email;
+        return input.next();
     }
 
     public static int enterUserType() {
         boolean userTypeApproved = false;
-        System.out.print("Please enter user type (1 or 2) \n1) Admin\n2) User\n");
+        System.out.print("Please enter user type (0 or 1) \n0) Admin\n1) User\n");
         int userType = input.nextInt();
 
         do {
-            if (userType != 1 && userType != 2)
+            if (userType != 0 && userType != 1)
                 System.out.println("Type must be either admin or user. P try again");
             else{
                 userTypeApproved = true;
@@ -195,7 +202,7 @@ public class Tui {
 
         } while (!userTypeApproved);
 
-        return userType-1;
+        return userType;
     }
 
     public static void miscOut(String s) {

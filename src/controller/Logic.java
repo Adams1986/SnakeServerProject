@@ -32,7 +32,7 @@ public class Logic {
         return getEncryptedListOfDto(db.getUsers(userId));
     }
 
-    public static ArrayList<User> getUsers() {
+    public static ArrayList<Gamer> getUsers() {
 
         // Define ArrayList to be used to add users and return them.
         return db.getUsers(-1);
@@ -93,7 +93,7 @@ public class Logic {
 
     /**
      * Authenticates user
-     * The method use 2 parameters: username and password which it authenticates as the correct credentials of an existing user.
+     * The method uses 2 parameters: username and password which it authenticates as the correct credentials of an existing user.
      * Key 1: User type (0 = admin), (1 = user)
      * Key 2: Error/Succes code (0 = user doesnt exists), (1 = password is wrong), (2 = successful login)
      * Key 3: Contain the authenticated users id
@@ -110,22 +110,26 @@ public class Logic {
 
         if (user == null) {
             // User does not exists.
-            hashMap.put("code", 0);
+            hashMap.put("code", 1);
             hashMap.put("usertype", -1);
         }
         else {
-            hashMap.put("usertype", user.getType());
-
             if (password.equals(user.getPassword())) {
-                // Return 2 if user exists and password is correct. Success.
-                hashMap.put("code", 2);
-                hashMap.put("userid", user.getId());
 
+                if (user.getType() == 0) {
+                    hashMap.put("code", 0);
+                }
+                else {
+                    // Return 2 if user exists and password is correct. Success.
+                    hashMap.put("code", 2);
+                    hashMap.put("userid", user.getId());
+                }
             }
             else {
                 //Return 1 if user exists but password is wrong.
                 hashMap.put("code", 1);
             }
+            hashMap.put("usertype", user.getType());
         }
         return hashMap;
     }
@@ -238,6 +242,19 @@ public class Logic {
 
         //gameid, opponentcontrolls
         Game game = db.getGame(requestGame.getGameId());
+        ArrayList<Gamer> gamersTotalScore = db.getScore();
+
+        for (Gamer g : gamersTotalScore) {
+
+            if (g.getId() == game.getHost().getId()){
+
+                game.getHost().setTotalScore(g.getTotalScore());
+            }
+            else if (g.getId() == game.getOpponent().getId()) {
+
+                game.getOpponent().setTotalScore(g.getTotalScore());
+            }
+        }
 
         if(game.getOpponent() == null)
         {
@@ -245,9 +262,10 @@ public class Logic {
         }
         else{
             game.getOpponent().setControls(requestGame.getOpponent().getControls());
-        }
 
-        Map gamers = GameEngine.playGame(game);
+        }
+        GameEngine gameEngine = new GameEngine();
+        Map gamers = gameEngine.playGame(game);
 
         game = endGame(gamers, game);
 
@@ -331,7 +349,7 @@ public class Logic {
 
     }
 
-    public static String getEncryptedListOfDto(ArrayList<User> list){
+    public static String getEncryptedListOfDto(ArrayList<Gamer> list){
 
         HashMap<String, String> encryptedList = new HashMap<>();
         encryptedList.put("data", Security.encrypt(new Gson().toJson(list), Config.getEncryptionkey()));
