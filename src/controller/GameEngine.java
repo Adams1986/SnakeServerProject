@@ -11,10 +11,14 @@ import model.Gamer;
 
 /**
  * Class to determine who wins the game and all functions that are relevant in that sense.
- * Created by: Kasper Tidemann, Henrik Thorn and Jesper Bruun Hansen
+ * Created by: Kasper Tidemann, Henrik Thorn and Jesper Bruun Hansen with a special mention for SIMON ADAMS who worked
+ * on fixing collision issues.
  */
 public class GameEngine {
 
+    /*instance variables instead of local variables. Cannot pass local variables as params into a method and use again
+     with updated values. Changes in method call stays in method call.
+      */
     private int hostX;
     private int hostY;
     private int opponentX;
@@ -29,11 +33,11 @@ public class GameEngine {
         String hostControls = host.getControls();
         String opponentControls = opponent.getControls();
 
+        //determining start position for host and opponent, depending on map size.
         hostX = (game.getMapSize()-1)/2;
         hostY = (game.getMapSize()+3)/2;
         opponentX = (game.getMapSize()+3)/2;
         opponentY = (game.getMapSize()-1)/2;
-        System.out.println("hx: "+hostX +"hy: " + hostY+"ox: "+opponentX+"oy: "+opponentY);
 
         boolean isHostTurn;
 
@@ -45,16 +49,21 @@ public class GameEngine {
         int hostTotal = host.getTotalScore() + 1;
         int opponentTotal = opponent.getTotalScore() + 1;
 
-        int dictatingNumber = new Random().nextInt(hostTotal + opponentTotal);
+        //generate a set of numbers matching total point of host and opponent
+        int turnDictator = new Random().nextInt(hostTotal + opponentTotal);
 
+        /*if host is the most awesome, he gets to act first every time random number (turnDictator)
+        is less than his total score
+         */
         if (hostTotal > opponentTotal) {
 
-            isHostTurn = dictatingNumber < hostTotal;
-
-        } else {
-            isHostTurn = dictatingNumber < opponentTotal;
+            isHostTurn = turnDictator < hostTotal;
         }
+        //if opponent is better, he gets the first move if turnDictator is less than his total
+        else {
 
+            isHostTurn = turnDictator < opponentTotal;
+        }
         // Split each controls string into a character array:
         char[] hostControlCharacters = hostControls.toCharArray();
         char[] opponentControlCharacters = opponentControls.toCharArray();
@@ -107,7 +116,6 @@ public class GameEngine {
                         hostScore++;
 
                     }
-//                    if (newHostPoint.x > boundary || newHostPoint.x < boundary || newHostPoint.y > boundary || newHostPoint.y < boundary) {
                     else if (newHostPoint.x > boundary || newHostPoint.y > boundary) {
 
                         hostDidCrash = true;
@@ -142,7 +150,6 @@ public class GameEngine {
                         opponentScore++;
                     }
                     else if (newOpponentPoint.x > boundary || newOpponentPoint.y > boundary) {
-//                    if (newOpponentPoint.x > boundary || newOpponentPoint.x < boundary || newOpponentPoint.y > boundary || newOpponentPoint.y < boundary) {
 
                         opponentDidCrash = true;
                     }
@@ -155,14 +162,15 @@ public class GameEngine {
                         hostKills++;
                         opponentDidCrash = true;
                     }
-
                     opponentCounter++;
                 }
             }
+            //change turn if no one crashed
             if (!opponentDidCrash && !hostDidCrash){
 
                 isHostTurn = !isHostTurn;
             }
+            //if host has died make sure it is never host turn again
             else if (hostDidCrash){
 
                 isHostTurn = false;
@@ -170,7 +178,6 @@ public class GameEngine {
             else
                 isHostTurn = true;
         }
-
         // Set Score and Kill for the Gamer object for the host user.
         host.setScore(hostScore);
         host.setKills(hostKills);
@@ -194,11 +201,13 @@ public class GameEngine {
 
         // Return the gamers back to the logic layer, who will now have access to see score, winner etc.
         return gamers;
-
-
     }
 
-
+    /**
+     * Method used to move the host snake.
+     * @param move
+     * @returns a new Point with updated x,y coordinates
+     */
     private Point gameMoveHost(char move) {
 
         //Calculate the new X,Y coordinates based on the char from the user.
@@ -211,12 +220,15 @@ public class GameEngine {
         } else if (move == 's') {
             hostY--;
         }
-
         return new Point(hostX, hostY);
     }
 
+    /**
+     * Method for moving opponent snake
+     * @param move
+     * @returns a new Point with updated x,y coordinates
+     */
     private Point gameMoveOpponent(char move) {
-
 
         //Calculate the new X,Y coordinates based on the char from the user.
         if (move == 'a') {
@@ -228,7 +240,6 @@ public class GameEngine {
         } else if (move == 's') {
             opponentY--;
         }
-
         return new Point(opponentX, opponentY);
     }
 }
