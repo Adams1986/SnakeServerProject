@@ -96,6 +96,7 @@ public class GameEngine {
         int hostCounter = 0;
         int opponentCounter = 0;
 
+        //game-loop
         for (int i = 0; i < totalMovesCount; i++) {
 
             //checks whose turn it ise
@@ -178,6 +179,20 @@ public class GameEngine {
             else
                 isHostTurn = true;
         }
+        //end of game-loop
+
+        //add multiplier for small maps
+        if (boundary == 8){
+
+            hostScore = hostScore * 5;
+            opponentScore = opponentScore * 5;
+        }
+        else if (boundary == 14){
+
+            hostScore = hostScore * 3/2;
+            opponentScore = opponentScore * 3/2;
+        }
+
         // Set Score and Kill for the Gamer object for the host user.
         host.setScore(hostScore);
         host.setKills(hostKills);
@@ -190,11 +205,11 @@ public class GameEngine {
         // If the game is draw, both object will be loser.
         if (hostScore > opponentScore) {
             host.setWinner(true);
-            opponent.setControls(opponentControls.substring(0, opponentMoves.size()));
+            opponent.setControls(opponentControls.substring(0, opponentMoves.size()-1));
         }
         if (hostScore < opponentScore) {
             opponent.setWinner(true);
-            host.setControls(hostControls.substring(0, hostMoves.size()));
+            host.setControls(hostControls.substring(0, hostMoves.size()-1));
         }
         gamers.put('h', host);
         gamers.put('o', opponent);

@@ -153,7 +153,8 @@ public class DatabaseDriver {
     }
 
     public String authenticatedSql() {
-        return "Select * from users where username = ? AND status <> 'deleted'";
+        return "Select users.*, sum(scores.score) as TotalScore from users " +
+                "join scores where users.id = scores.user_id AND username = ? AND status <> 'deleted'";
     }
 
     public String getSqlHighScore() {

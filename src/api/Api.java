@@ -5,10 +5,12 @@ import java.util.HashMap;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import controller.DataParser;
 import controller.Logic;
 import controller.Security;
 import database.DatabaseWrapper;
 import model.Game;
+import model.Gamer;
 import model.Score;
 import model.User;
 
@@ -18,7 +20,6 @@ import javax.ws.rs.core.Response;
 @Path("/api")
 public class Api {
 
-    //TODO: rewrite this! does not need the 'huge' switch. Default is enough
     @POST //"POST-request" er ny data vi kan indtaste for at logge ind.
     @Path("/login/")
     @Produces("application/json")
@@ -29,15 +30,15 @@ public class Api {
 
         try {
             //Decrypt user
-            User user = Logic.getDecryptedUser(data);
+            User user = DataParser.getDecryptedUser(data);
             user.setPassword(Security.hashing(user.getPassword()));
 
-            HashMap<String, Integer> hashMap = Logic.authenticateUser(user.getUsername(), user.getPassword());
+            int code = Logic.authenticateUser(user);
 
-            switch (hashMap.get("code")) {
+            switch (code) {
                 case 0:
                     statusCode = 400;
-                    dataMap.put("message", "Get back to work!");
+                    dataMap.put("message", "Nice try Admin. Get back to work!");
                     break;
                 case 1:
                     statusCode = 400;
@@ -47,7 +48,7 @@ public class Api {
                 case 2:
                     statusCode = 200;
                     dataMap.put("message", "Login successful");
-                    dataMap.put("data", hashMap.get("userid") + "");
+                    dataMap.put("data", DataParser.getEncryptedDto(user));
                     break;
 
                 default:
@@ -76,13 +77,13 @@ public class Api {
     public Response getAllUsers(@PathParam("userid") int userId) {
 
         //TODO change maybe?
-        //ArrayList<User> users = Logic.getUsers();
+        ArrayList<Gamer> users = Logic.getEncryptedUsers(userId);
 
         return Response
                 .status(200)
-                .entity(Logic.getEncryptedUsers(userId))
-                .header("Access-Control-Allow-Origin", "*")
-                .build();
+                .entity(DataParser.getEncryptedListOfDto(users))
+                        .header("Access-Control-Allow-Origin", "*")
+                        .build();
     }
 
 
@@ -120,7 +121,7 @@ public class Api {
         int statusCode;
 
         try {
-            user = Logic.getDecryptedUser(data);
+            user = DataParser.getDecryptedUser(data);
             //set type to 1 so will always create a user and not an admin
             user.setType(1);
 
@@ -179,7 +180,7 @@ public class Api {
         //udprint/hent/identificer af data omkring spillere
         if (user != null) {
             statusCode = 200;
-            sendingToClient = Logic.getEncryptedDto(user);
+            sendingToClient = DataParser.getEncryptedDto(user);
         }
         else {
             statusCode = 400;

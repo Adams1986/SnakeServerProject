@@ -695,9 +695,13 @@ public class DatabaseWrapper {
 
                 user = new User();
                 user.setId(resultSet.getInt("id"));
+                user.setFirstName(resultSet.getString("first_name"));
+                user.setLastName(resultSet.getString("last_name"));
+                user.setEmail(resultSet.getString("email"));
                 user.setUsername(resultSet.getString("username"));
                 user.setPassword(resultSet.getString("password"));
                 user.setType(resultSet.getInt("type"));
+                user.setTotalScore(resultSet.getInt("totalScore"));
 
             }
         } catch (SQLException e) {

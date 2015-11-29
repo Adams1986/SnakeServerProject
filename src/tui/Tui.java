@@ -40,9 +40,11 @@ public class Tui {
     public static void login() {
         miscOut("Please log in.");
 
-        HashMap <String, Integer> hashMap = Logic.authenticateUser(enterUsername(), Security.hashing(enterPassword()));
+        User user = new User();
+        user.setUsername(enterUsername());
+        user.setPassword(Security.hashing(enterPassword()));
+       int code = Logic.authenticateUser(user);
 
-        int code = hashMap.get("code");
         if (code == 2)
             miscOut("Admin does not exist.");
         else if (code == 1) {

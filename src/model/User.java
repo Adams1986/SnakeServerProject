@@ -4,10 +4,7 @@ import java.sql.Date;
 import java.util.Scanner;
 
 
-/**
- * Created by Oscar on 12-10-2015.
- */
-//
+
 public class User {
 
     //creating variables
@@ -20,6 +17,7 @@ public class User {
     private String status;
     private String email;
     private int type;
+    private int totalScore;
     public User () {}
 
     //creating get and set method for all the variables, so they can be used by other classes
@@ -95,5 +93,13 @@ public class User {
 
     public void setType(int type) {
         this.type = type;
+    }
+
+    public void setTotalScore(int totalScore) {
+        this.totalScore = totalScore;
+    }
+
+    public int getTotalScore() {
+        return totalScore;
     }
 }

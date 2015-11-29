@@ -26,10 +26,10 @@ public class Logic {
      *
      * @return ArrayList of users
      */
-    public static String getEncryptedUsers(int userId) {
+    public static ArrayList<Gamer> getEncryptedUsers(int userId) {
 
         // Define ArrayList to be used to add users and return them.
-        return getEncryptedListOfDto(db.getUsers(userId));
+        return db.getUsers(userId);
     }
 
     public static ArrayList<Gamer> getUsers() {
@@ -93,45 +93,46 @@ public class Logic {
 
     /**
      * Authenticates user
-     * The method uses 2 parameters: username and password which it authenticates as the correct credentials of an existing user.
-     * Key 1: User type (0 = admin), (1 = user)
-     * Key 2: Error/Succes code (0 = user doesnt exists), (1 = password is wrong), (2 = successful login)
-     * Key 3: Contain the authenticated users id
+     * The method uses 1 parameters: user which it authenticates as the correct credentials of an existing user.
+     * Error/Success code (0 = admin trying to play) (1 = user doesn't exists), (1 = password is wrong), (2 = successful login)
      *
-     * @param username
-     * @param password
+     * @param user
      * @return hashMap with user type, error/succes code, userid
      */
-    public static HashMap authenticateUser(String username, String password) {
+    public static int authenticateUser(User user) {
 
+        User temp = db.getUserByUsername(user.getUsername());
+        int code = 0;
 
-        HashMap <String, Integer> hashMap = new HashMap();
-        User user = db.getUserByUsername(username);
-
-        if (user == null) {
+        if (temp == null) {
             // User does not exists.
-            hashMap.put("code", 1);
-            hashMap.put("usertype", -1);
+            code = 1;
+            user.setType(-1);
         }
         else {
-            if (password.equals(user.getPassword())) {
+            if (user.getPassword().equals(temp.getPassword())) {
 
-                if (user.getType() == 0) {
-                    hashMap.put("code", 0);
-                }
-                else {
-                    // Return 2 if user exists and password is correct. Success.
-                    hashMap.put("code", 2);
-                    hashMap.put("userid", user.getId());
+                if (temp.getType() != 0) {
+
+                    code = 2;
+                    user.setId(temp.getId());
+                    user.setFirstName(temp.getFirstName());
+                    user.setLastName(temp.getLastName());
+                    user.setEmail(temp.getEmail());
+                    user.setTotalScore(temp.getTotalScore());
+
+                    //resetting password info, so it won't be sent back to user
+                    user.setPassword("");
+                    // Return 2 if temp exists and password is correct. Success.
                 }
             }
             else {
-                //Return 1 if user exists but password is wrong.
-                hashMap.put("code", 1);
+                //Return 1 if temp exists but password is wrong.
+                code = 1;
             }
-            hashMap.put("usertype", user.getType());
+            user.setType(temp.getType());
         }
-        return hashMap;
+        return code;
     }
 
 
@@ -321,39 +322,4 @@ public class Logic {
         return db.getScoresByUserID(userId);
     }
 
-    //TODO: find suitable place. Maybe make a parser class like on client
-    public static String getEncryptedDto(Object o){
-
-        HashMap<String, String> encryptedDto = new HashMap<>();
-        encryptedDto.put("data", Security.encrypt(new Gson().toJson(o), Config.getEncryptionkey()));
-
-        return new Gson().toJson(encryptedDto);
-    }
-
-    public static User getDecryptedUser(String jsonData){
-
-        //creating the gson-parser
-        Gson gson = new Gson();
-
-        //use parser to parse json data into a hash map
-        HashMap<String, String> jsonHashMap = gson.fromJson(jsonData, HashMap.class);
-
-        //get the value from the key "data" in the hash map
-        String encryptedUser = jsonHashMap.get("data");
-
-        //decrypt the value inside "data" key, using the Security.decrypt method
-        String jsonUser = Security.decrypt(encryptedUser, Config.getEncryptionkey());
-
-        //return the decrypted value as a user object, using the gson method fromJson
-        return gson.fromJson(jsonUser, User.class);
-
-    }
-
-    public static String getEncryptedListOfDto(ArrayList<Gamer> list){
-
-        HashMap<String, String> encryptedList = new HashMap<>();
-        encryptedList.put("data", Security.encrypt(new Gson().toJson(list), Config.getEncryptionkey()));
-
-        return new Gson().toJson(encryptedList);
-    }
 }
