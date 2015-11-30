@@ -237,6 +237,7 @@ public class Api {
         try {
             Game game = new Gson().fromJson(json, Game.class);
 
+            //TODO: game closed message often triggered
             if (Logic.joinGame(game)) {
                 statusCode = 201;
                 sendingToClient = "{\"message\":\"Game was joined\"}";
@@ -267,6 +268,7 @@ public class Api {
 
         int statusCode;
         String sendingToClient;
+        HashMap<String, String> dataMap = new HashMap<>();
 
         try {
             Game game = Logic.startGame(new Gson().fromJson(json, Game.class));
@@ -285,9 +287,11 @@ public class Api {
             statusCode = 400;
             sendingToClient = "{\"message\":\"Error in JSON\"}";
         }
+        dataMap.put("message", sendingToClient);
+
         return Response
                 .status(statusCode)
-                .entity(sendingToClient)
+                .entity(new Gson().toJson(dataMap))
                 .header("Access-Control-Allow-Headers", "*")
                 .build();
     }
