@@ -68,7 +68,7 @@ public class DatabaseDriver {
         return "select * from " + table + " WHERE id = ? AND status <> 'deleted'";
     }
 
-    public String getSqlRecordWithHighScore(String table) {
+    public String getSqlRecordWithoutCurrentUser(String table) {
 
         return "select * from " + table + " WHERE id = ? AND status <> 'deleted'";
     }

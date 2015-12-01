@@ -26,13 +26,13 @@ public class Logic {
      *
      * @return ArrayList of users
      */
-    public static ArrayList<Gamer> getEncryptedUsers(int userId) {
+    public static ArrayList<User> getEncryptedUsers(int userId) {
 
         // Define ArrayList to be used to add users and return them.
         return db.getUsers(userId);
     }
 
-    public static ArrayList<Gamer> getUsers() {
+    public static ArrayList<User> getUsers() {
 
         // Define ArrayList to be used to add users and return them.
         return db.getUsers(-1);

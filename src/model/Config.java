@@ -3,10 +3,12 @@ package model;
 //import org.codehaus.jettison.json.JSONException;
 //import org.codehaus.jettison.json.JSONObject;
 
+import io.jsonwebtoken.impl.crypto.MacProvider;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import java.io.*;
+import java.security.Key;
 
 public class Config {
 
@@ -19,6 +21,7 @@ public class Config {
     private static String hashingSalt;
     private static String encryptionkey;
     private static int serverPort;
+    public static final Key key = MacProvider.generateKey();
 
     // Create init-method to read from the config.json file
     // and parse it to the variables in the class.

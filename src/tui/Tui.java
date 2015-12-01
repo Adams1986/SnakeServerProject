@@ -16,25 +16,31 @@ public class Tui {
 
     public static void serverMenu(){
         boolean serverRunning = true;
-        while (serverRunning) {
 
-            Tui.miscOut("\n***Welcome to the Snake server***\n");
-            Tui.miscOut("What do you want to do?");
-            Tui.miscOut("1) Login as admin");
-            Tui.miscOut("2) Stop server");
+        try {
 
-            switch (input.nextInt()) {
-                case 1:
-                    login();
-                    break;
-                case 2:
-                    serverRunning = false;
+            while (serverRunning) {
 
-                    break;
-                default:
-                    Tui.miscOut("Unassigned key.");
+                Tui.miscOut("\n***Welcome to the Snake server***\n");
+                Tui.miscOut("What do you want to do?");
+                Tui.miscOut("1) Login as admin");
+                Tui.miscOut("2) Stop server");
+
+
+                switch (input.nextInt()) {
+                    case 1:
+                        login();
+                        break;
+                    case 2:
+                        serverRunning = false;
+
+                        break;
+                    default:
+                        Tui.miscOut("Unassigned key.");
+                }
             }
         }
+        catch (NoSuchElementException e){}
     }
 
     public static void login() {
@@ -43,7 +49,7 @@ public class Tui {
         User user = new User();
         user.setUsername(enterUsername());
         user.setPassword(Security.hashing(enterPassword()));
-       int code = Logic.authenticateUser(user);
+        int code = Logic.authenticateUser(user);
 
         if (code == 2)
             miscOut("Admin does not exist.");
@@ -71,7 +77,7 @@ public class Tui {
                     break;
                 case 2:
                     miscOut("User List: ");
-                    ArrayList<Gamer> userList = Logic.getUsers();
+                    ArrayList<User> userList = Logic.getUsers();
                     listUsers(userList);
                     break;
                 case 3:
@@ -106,7 +112,7 @@ public class Tui {
         return input.nextInt();
     }
 
-    public static void listUsers(ArrayList<Gamer> userList) {
+    public static void listUsers(ArrayList<User> userList) {
 
         for (User user : userList) {
             System.out.println("Id: " + user.getId() + "\tUser: " + user.getUsername() + "\tStatus: " + user.getStatus());

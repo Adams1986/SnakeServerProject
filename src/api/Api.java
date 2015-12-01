@@ -9,16 +9,83 @@ import controller.DataParser;
 import controller.Logic;
 import controller.Security;
 import database.DatabaseWrapper;
-import model.Game;
-import model.Gamer;
-import model.Score;
-import model.User;
+import io.jsonwebtoken.*;
+import model.*;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 @Path("/api")
 public class Api {
+
+    private String jwtString;
+    private String userId = "1";
+
+    @Path("/loginTest")
+    @POST
+    @Produces("application/json")
+    public Response loginTest(String data) {
+
+        User user = new Gson().fromJson(data, User.class);
+
+        int statusCode = 200;
+        if (user.getUsername().equals("siad14ab") && user.getPassword().equals("123")) {
+
+            try {
+                jwtString = Jwts.builder().setSubject(userId).signWith(SignatureAlgorithm.HS256, Config.key).compact();
+                assert Jwts.parser().setSigningKey(Config.key).parseClaimsJwt(jwtString).getBody().getSubject().equals(userId);
+            } catch (ExpiredJwtException e) {
+                e.printStackTrace();
+            } catch (UnsupportedJwtException e) {
+                e.printStackTrace();
+            } catch (MalformedJwtException e) {
+                e.printStackTrace();
+            } catch (SignatureException e) {
+                e.printStackTrace();
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        return Response
+                .status(statusCode)
+                .entity("{\"response\":\"login successful\"}")
+                .header("Access-Control-Allow-Origin", "*")
+                .header("authorization", jwtString)
+                .build();
+
+    }
+
+    @Path("/key/")
+    @GET
+    @Produces("application/json")
+    public Response getKey(@HeaderParam("authorization") String authorization){
+
+        int statusCode;
+        String data;
+        Jwt jwt = null;
+        System.out.println(authorization);
+        System.out.println(Config.key.getEncoded().toString());
+        try {
+
+
+            jwt = Jwts.parser().setSigningKey(Config.key).parse(authorization);
+            statusCode = 200;
+
+            data = "{\"response\":\"success\"}";
+
+        } catch (InvalidClaimException | SignatureException | MalformedJwtException e) {
+            e.printStackTrace();
+            data = "{\"response\":\"failure\"}";
+            statusCode = 401;
+        }
+        return Response
+                .status(statusCode)
+                .entity(data)
+                .header("Access-Control-Allow-Origin", "*")
+                .build();
+    }
 
     @POST //"POST-request" er ny data vi kan indtaste for at logge ind.
     @Path("/login/")
@@ -32,6 +99,23 @@ public class Api {
             //Decrypt user
             User user = DataParser.getDecryptedUser(data);
             user.setPassword(Security.hashing(user.getPassword()));
+
+            try {
+                jwtString = Jwts.builder().setSubject(user.getUsername()).signWith(SignatureAlgorithm.HS256, Config.key).compact();
+                assert Jwts.parser().setSigningKey(Config.key).parseClaimsJwt(jwtString).getBody().getSubject().equals(user.getUsername());
+                System.out.println(jwtString);
+
+            } catch (ExpiredJwtException e) {
+                e.printStackTrace();
+            } catch (UnsupportedJwtException e) {
+                e.printStackTrace();
+            } catch (MalformedJwtException e) {
+                e.printStackTrace();
+            } catch (SignatureException e) {
+                e.printStackTrace();
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            }
 
             int code = Logic.authenticateUser(user);
 
@@ -56,9 +140,8 @@ public class Api {
                     dataMap.put("message", "Unknown error. Please contact Henrik Thorn at: henrik@itkartellet.dk");
                     break;
             }
-        }
-        catch (JsonSyntaxException | NullPointerException e) {
-
+        } catch (JsonSyntaxException | NullPointerException e) {
+            e.printStackTrace();
             statusCode = 400;
             dataMap.put("message", "Error in JSON");
         }
@@ -66,6 +149,7 @@ public class Api {
         return Response
                 .status(statusCode)
                 .entity(new Gson().toJson(dataMap))
+                .header("authorization", jwtString)
                 .header("Access-Control-Allow-Headers", "*")
                 .build();
 
@@ -74,16 +158,41 @@ public class Api {
     @GET //"GET-request"
     @Path("/users/{userid}") //USER-path - identifice det inden for metoden
     @Produces("application/json")
-    public Response getAllUsers(@PathParam("userid") int userId) {
+    public Response getAllUsers(@HeaderParam("authorization") String authorization) {
 
-        //TODO change maybe?
-        ArrayList<Gamer> users = Logic.getEncryptedUsers(userId);
+        int statusCode;
+        String data;
+        Jwt jwt = null;
 
-        return Response
-                .status(200)
-                .entity(DataParser.getEncryptedListOfDto(users))
-                        .header("Access-Control-Allow-Origin", "*")
-                        .build();
+        System.out.println(authorization);
+
+        ArrayList<User> users = null;
+        try {
+
+            jwt = Jwts.parser().setSigningKey(Config.key).parse(authorization);
+            System.out.println(jwt.getBody());
+            statusCode = 200;
+
+            //TODO change maybe?
+            users = Logic.getEncryptedUsers(0);
+
+            return Response
+                    .status(statusCode)
+                    .entity(DataParser.getEncryptedListOfDto(users))
+                    .header("Access-Control-Allow-Origin", "*")
+                    .build();
+
+        } catch (InvalidClaimException | SignatureException | MalformedJwtException e) {
+            e.printStackTrace();
+            data = "{\"response\":\"failure\"}";
+            statusCode = 401;
+
+            return Response
+                    .status(statusCode)
+                    .entity("{\"response\":\"failure\"}")
+                    .header("Access-Control-Allow-Origin", "*")
+                    .build();
+        }
     }
 
 
@@ -237,7 +346,6 @@ public class Api {
         try {
             Game game = new Gson().fromJson(json, Game.class);
 
-            //TODO: game closed message often triggered
             if (Logic.joinGame(game)) {
                 statusCode = 201;
                 sendingToClient = "{\"message\":\"Game was joined\"}";
@@ -268,7 +376,6 @@ public class Api {
 
         int statusCode;
         String sendingToClient;
-        HashMap<String, String> dataMap = new HashMap<>();
 
         try {
             Game game = Logic.startGame(new Gson().fromJson(json, Game.class));
@@ -287,11 +394,9 @@ public class Api {
             statusCode = 400;
             sendingToClient = "{\"message\":\"Error in JSON\"}";
         }
-        dataMap.put("message", sendingToClient);
-
         return Response
                 .status(statusCode)
-                .entity(new Gson().toJson(dataMap))
+                .entity(sendingToClient)
                 .header("Access-Control-Allow-Headers", "*")
                 .build();
     }

@@ -41,7 +41,7 @@ public class DataParser {
 
     }
 
-    public static String getEncryptedListOfDto(ArrayList<Gamer> list){
+    public static String getEncryptedListOfDto(ArrayList<User> list){
 
         HashMap<String, String> encryptedList = new HashMap<>();
         encryptedList.put("data", Security.encrypt(new Gson().toJson(list), Config.getEncryptionkey()));

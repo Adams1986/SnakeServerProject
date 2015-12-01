@@ -203,11 +203,11 @@ public class DatabaseWrapper {
      *
      * @return
      */
-    public ArrayList<Gamer> getUsers(int userId) {
+    public ArrayList<User> getUsers(int userId) {
         ResultSet resultSet = null;
         PreparedStatement ps;
-        Gamer user = null;
-        ArrayList<Gamer> result = null;
+        User user = null;
+        ArrayList<User> result = null;
 
         try {
             ps = connection.prepareStatement(dbDriver.getSqlRecords("users"));
@@ -225,7 +225,7 @@ public class DatabaseWrapper {
                     //userId allows getUsers to be used by client to invite other users without showing on list
                     if (userId != resultSet.getInt("id")) {
 
-                        user = new Gamer();
+                        user = new User();
 
                         user.setId(resultSet.getInt("id"));
                         user.setFirstName(resultSet.getString("first_name"));

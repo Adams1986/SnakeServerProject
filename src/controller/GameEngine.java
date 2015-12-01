@@ -117,19 +117,21 @@ public class GameEngine {
                         hostScore++;
 
                     }
-                    else if (newHostPoint.x > boundary || newHostPoint.y > boundary) {
+                    else if (newHostPoint.x > boundary || newHostPoint.x < 0) {
 
                         hostDidCrash = true;
                     }
-                    else if (newHostPoint.x < boundary || newHostPoint.y < boundary){
+                    else if (newHostPoint.y > boundary || newHostPoint.y < 0){
 
                         hostDidCrash = true;
                     }
                     //else host crashes into other gamer
                     else {
 
-                        opponentKills++;
-                        hostDidCrash = true;
+                        if (!opponentDidCrash) {
+                            opponentKills++;
+                            hostDidCrash = true;
+                        }
                     }
 
                     //increment counter and set turn to opponent
@@ -150,18 +152,20 @@ public class GameEngine {
                         opponentMoves.add(newOpponentPoint);
                         opponentScore++;
                     }
-                    else if (newOpponentPoint.x > boundary || newOpponentPoint.y > boundary) {
+                    else if (newOpponentPoint.x > boundary || newOpponentPoint.x < 0) {
 
                         opponentDidCrash = true;
                     }
-                    else if (newOpponentPoint.x < boundary || newOpponentPoint.y < boundary){
+                    else if (newOpponentPoint.y > boundary || newOpponentPoint.y < 0){
 
                         opponentDidCrash = true;
                     }
                     else {
 
-                        hostKills++;
-                        opponentDidCrash = true;
+                        if (!hostDidCrash) {
+                            hostKills++;
+                            opponentDidCrash = true;
+                        }
                     }
                     opponentCounter++;
                 }
