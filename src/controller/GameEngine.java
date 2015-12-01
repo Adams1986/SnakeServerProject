@@ -49,7 +49,7 @@ public class GameEngine {
         int hostTotal = host.getTotalScore() + 1;
         int opponentTotal = opponent.getTotalScore() + 1;
 
-        //generate a set of numbers matching total point of host and opponent
+        //generate a set of numbers up to total points of host and opponent
         int turnDictator = new Random().nextInt(hostTotal + opponentTotal);
 
         /*if host is the most awesome, he gets to act first every time random number (turnDictator)
@@ -72,18 +72,18 @@ public class GameEngine {
         boolean hostDidCrash = false;
         int hostScore = 0;
         int hostKills = 0;
-        //x set to -1 and y to 1 to match up with client game engine
 
         // The game variables for the opponent:
         boolean opponentDidCrash = false;
         int opponentScore = 0;
-        //x set to 1 and y to -1 to match up with client game engine
         int opponentKills = 0;
 
         // Playing field options:
-        int boundary = game.getMapSize()-1;
+        int boundary = game.getMapSize();
 
-        int totalMovesCount = hostControls.length() + opponentControls.length();
+        int hostMovesNumber = hostControls.length();
+        int opponentMovesNumber = opponentControls.length();
+        int totalMovesNumber = hostMovesNumber+opponentMovesNumber;
 
         // Arrays of host and opponent moves:
         LinkedList<Point> hostMoves = new LinkedList<>();
@@ -96,69 +96,74 @@ public class GameEngine {
         int hostCounter = 0;
         int opponentCounter = 0;
 
-        //game-loop
-        for (int i = 0; i < totalMovesCount; i++) {
+        //game-loop. Runs loop the total of both gamers control length
+        for (int i = 0; i < totalMovesNumber; i++) {
 
             //checks whose turn it ise
             if (isHostTurn) {
 
-                //limits points to hostControls lenght
-                if (hostCounter < hostControls.length()) {
+                /*limits iterations through the host's controls to his total moves. Both important for points and exceptions.
+                !hostCrash
+                 */
+                if (hostCounter < hostMovesNumber && !hostDidCrash) {
 
                     //get w,s,a,d
                     char moveHost = hostControlCharacters[hostCounter];
                     //convert to a new point
                     Point newHostPoint = gameMoveHost(moveHost);
 
-                    //tjek boundary. If opponent snake is not there, add point to list
-                    if (!opponentMoves.contains(newHostPoint)) {
+                    //checking hosts x coordinates are inside boundary
+                    if (newHostPoint.x > boundary || newHostPoint.x < 1) {
+
+                        hostDidCrash = true;
+                    }
+                    //checking hosts y coordinates are inside boundary
+                    else if (newHostPoint.y > boundary || newHostPoint.y < 1){
+
+                        hostDidCrash = true;
+                    }
+                    //check boundary. If opponent snake is not there, add point to list
+                    else if (!opponentMoves.contains(newHostPoint)) {
+
 
                         hostMoves.add(newHostPoint);
                         hostScore++;
-
-                    }
-                    else if (newHostPoint.x > boundary || newHostPoint.x < 0) {
-
-                        hostDidCrash = true;
-                    }
-                    else if (newHostPoint.y > boundary || newHostPoint.y < 0){
-
-                        hostDidCrash = true;
                     }
                     //else host crashes into other gamer
                     else {
-
+                        /*checking if opponent has crashed. So if opponentMoves contains the new point & he hasn't crashed
+                        only then does host crash
+                         */
                         if (!opponentDidCrash) {
                             opponentKills++;
                             hostDidCrash = true;
                         }
                     }
-
                     //increment counter and set turn to opponent
                     hostCounter++;
                 }
             }
-            //checking turn. If opponent
+            //checking turn.
             else {
-
-                if (opponentCounter < opponentControls.length()) {
+                //Identical for opponent as the above for host
+                if (opponentCounter < opponentMovesNumber && !opponentDidCrash) {
 
                     char moveOpponent = opponentControlCharacters[opponentCounter];
                     Point newOpponentPoint = gameMoveOpponent(moveOpponent);
 
+                    if (newOpponentPoint.x > boundary || newOpponentPoint.x < 1) {
+
+                        opponentDidCrash = true;
+                    }
+                    else if (newOpponentPoint.y > boundary || newOpponentPoint.y < 1){
+
+                        opponentDidCrash = true;
+                    }
                     //add point if not true
-                    if (!hostMoves.contains(newOpponentPoint)) {
+                    else if (!hostMoves.contains(newOpponentPoint)) {
 
                         opponentMoves.add(newOpponentPoint);
                         opponentScore++;
-                    }
-                    else if (newOpponentPoint.x > boundary || newOpponentPoint.x < 0) {
-
-                        opponentDidCrash = true;
-                    }
-                    else if (newOpponentPoint.y > boundary || newOpponentPoint.y < 0){
-
-                        opponentDidCrash = true;
                     }
                     else {
 
@@ -185,13 +190,15 @@ public class GameEngine {
         }
         //end of game-loop
 
+        //adding multipliers - otherwise huge advantage to players always playing large maps.
         //add multiplier for small maps
-        if (boundary == 8){
+        if (boundary == 9){
 
             hostScore = hostScore * 5;
             opponentScore = opponentScore * 5;
         }
-        else if (boundary == 14){
+        //add multiplier for medium maps
+        else if (boundary == 15){
 
             hostScore = hostScore * 3/2;
             opponentScore = opponentScore * 3/2;
@@ -206,12 +213,12 @@ public class GameEngine {
         opponent.setKills(opponentKills);
 
         // Set Winner for gamer object for the winning user.
-        // If the game is draw, both object will be loser.
+        // If the score is the same no winner is set and it is a draw.
         if (hostScore > opponentScore) {
             host.setWinner(true);
             opponent.setControls(opponentControls.substring(0, opponentMoves.size()-1));
         }
-        if (hostScore < opponentScore) {
+        else if (opponentScore > hostScore){
             opponent.setWinner(true);
             host.setControls(hostControls.substring(0, hostMoves.size()-1));
         }
