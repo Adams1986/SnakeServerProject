@@ -129,6 +129,7 @@ public class DatabaseDriver {
         return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host INNER JOIN users opponents ON opponents.id = opponent WHERE host = ? OR opponent = ?;";
     }
 
+    //Using left outer join for when games are "open". Inner joins not useful as null values will create an empty set. And open games have a lot of null values
     public String getSQLGamesByStatusAndUserID(){
 
         return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username, winners.username AS winner_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent LEFT OUTER JOIN users winners ON winners.id = winner WHERE games.status = ? AND (host = ? OR opponent = ?);";

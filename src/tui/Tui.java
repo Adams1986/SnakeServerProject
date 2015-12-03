@@ -26,7 +26,6 @@ public class Tui {
                 Tui.miscOut("1) Login as admin");
                 Tui.miscOut("2) Stop server");
 
-
                 switch (input.nextInt()) {
                     case 1:
                         login();
@@ -49,7 +48,7 @@ public class Tui {
         User user = new User();
         user.setUsername(enterUsername());
         user.setPassword(Security.hashing(enterPassword()));
-        int code = Logic.authenticateUser(user);
+       int code = Logic.authenticateUser(user);
 
         if (code == 2)
             miscOut("Admin does not exist.");

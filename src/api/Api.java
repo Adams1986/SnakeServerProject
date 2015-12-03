@@ -106,15 +106,17 @@ public class Api {
                 System.out.println(jwtString);
 
             } catch (ExpiredJwtException e) {
-                e.printStackTrace();
+
             } catch (UnsupportedJwtException e) {
-                e.printStackTrace();
+
             } catch (MalformedJwtException e) {
-                e.printStackTrace();
+
             } catch (SignatureException e) {
-                e.printStackTrace();
+
             } catch (IllegalArgumentException e) {
-                e.printStackTrace();
+
+            } catch (IllegalStateException e){
+
             }
 
             int code = Logic.authenticateUser(user);
@@ -161,7 +163,7 @@ public class Api {
     public Response getAllUsers(@HeaderParam("authorization") String authorization) {
 
         int statusCode;
-        String data;
+        String message;
         Jwt jwt = null;
 
         System.out.println(authorization);
@@ -178,18 +180,18 @@ public class Api {
 
             return Response
                     .status(statusCode)
-                    .entity(DataParser.getEncryptedListOfDto(users))
+                    .entity(DataParser.getEncryptedUserList(users))
                     .header("Access-Control-Allow-Origin", "*")
                     .build();
 
         } catch (InvalidClaimException | SignatureException | MalformedJwtException e) {
             e.printStackTrace();
-            data = "{\"response\":\"failure\"}";
+            message = "{\"message\":\"failure\"}";
             statusCode = 401;
 
             return Response
                     .status(statusCode)
-                    .entity("{\"response\":\"failure\"}")
+                    .entity(message)
                     .header("Access-Control-Allow-Origin", "*")
                     .build();
         }
@@ -311,7 +313,7 @@ public class Api {
         String sendingToClient;
 
         try {
-            boolean createdGame = Logic.createGame(new Gson().fromJson(json, Game.class));
+            boolean createdGame = Logic.createGame(DataParser.getDecryptedGame(json));
 
             if (createdGame) {
 
@@ -344,7 +346,7 @@ public class Api {
         int statusCode;
 
         try {
-            Game game = new Gson().fromJson(json, Game.class);
+            Game game = DataParser.getDecryptedGame(json);
 
             if (Logic.joinGame(game)) {
                 statusCode = 201;
@@ -378,11 +380,11 @@ public class Api {
         String sendingToClient;
 
         try {
-            Game game = Logic.startGame(new Gson().fromJson(json, Game.class));
+            Game game = Logic.startGame(DataParser.getDecryptedGame(json));
 
             if (game != null) {
                 statusCode = 201;
-                sendingToClient = new Gson().toJson(game);
+                sendingToClient = DataParser.getEncryptedDto(game);
             }
             else {
                 statusCode = 400;
@@ -434,7 +436,7 @@ public class Api {
 
         return Response
                 .status(200)
-                .entity(new Gson().toJson(game))
+                .entity(DataParser.getEncryptedDto(game))
                 .header("Access-Control-Allow-Origin", "*")
                 .build();
     }
@@ -446,7 +448,7 @@ public class Api {
 
         return Response
                 .status(200)
-                .entity(new Gson().toJson(Logic.getHighscore()))
+                .entity(DataParser.getEncryptedScoreList(Logic.getHighscore()))
                 .header("Access-Control-Allow-Origin", "*")
                 .build();
 
@@ -461,7 +463,7 @@ public class Api {
 
         return Response
                 .status(200)
-                .entity(new Gson().toJson(highScores))
+                .entity(DataParser.getEncryptedScoreList(highScores))
                 .header("Access-Control-Allow-Origin", "*")
                 .build();
     }
@@ -478,7 +480,7 @@ public class Api {
 
         return Response
                 .status(200)
-                .entity(new Gson().toJson(games))
+                .entity(DataParser.getEncryptedGameList(games))
                 .header("Access-Control-Allow-Origin", "*")
                 .build();
     }
@@ -522,7 +524,7 @@ public class Api {
 
         return Response
                 .status(201)
-                .entity(new Gson().toJson(games))
+                .entity(DataParser.getEncryptedGameList(games))
                 .header("Access-Control-Allow-Origin", "*")
                 .build();
     }
@@ -541,7 +543,7 @@ public class Api {
 
         return Response
                 .status(201)
-                .entity(new Gson().toJson(score))
+                .entity(DataParser.getEncryptedScoreList(score))
                 .header("Access-Control-Allow-Origin", "*")
                 .build();
     }

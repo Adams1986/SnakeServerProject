@@ -122,9 +122,12 @@ public class GameEngine {
 
                         hostDidCrash = true;
                     }
-                    //check boundary. If opponent snake is not there, add point to list
-                    else if (!opponentMoves.contains(newHostPoint)) {
+                    else if (hostMoves.contains(newHostPoint)){
 
+                        hostDidCrash = true;
+                    }
+                    //check boundary. If opponent snake is not there, add point to list
+                    else if (!opponentMoves.contains(newHostPoint) || opponentDidCrash) {
 
                         hostMoves.add(newHostPoint);
                         hostScore++;
@@ -159,8 +162,12 @@ public class GameEngine {
 
                         opponentDidCrash = true;
                     }
+                    else if(opponentMoves.contains(newOpponentPoint)){
+
+                        opponentDidCrash = true;
+                    }
                     //add point if not true
-                    else if (!hostMoves.contains(newOpponentPoint)) {
+                    else if (!hostMoves.contains(newOpponentPoint) || hostDidCrash) {
 
                         opponentMoves.add(newOpponentPoint);
                         opponentScore++;
@@ -216,12 +223,14 @@ public class GameEngine {
         // If the score is the same no winner is set and it is a draw.
         if (hostScore > opponentScore) {
             host.setWinner(true);
-            opponent.setControls(opponentControls.substring(0, opponentMoves.size()-1));
         }
         else if (opponentScore > hostScore){
             opponent.setWinner(true);
-            host.setControls(hostControls.substring(0, hostMoves.size()-1));
         }
+
+        host.setControls(hostControls.substring(0, hostMoves.size()-1));
+        opponent.setControls(opponentControls.substring(0, opponentMoves.size()-1));
+
         gamers.put('h', host);
         gamers.put('o', opponent);
 
