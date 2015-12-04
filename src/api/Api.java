@@ -6,6 +6,7 @@ import java.util.HashMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import controller.DataParser;
+import controller.JWTProvider;
 import controller.Logic;
 import controller.Security;
 import database.DatabaseWrapper;
@@ -18,75 +19,6 @@ import javax.ws.rs.core.Response;
 @Path("/api")
 public class Api {
 
-    private String jwtString;
-    private String userId = "1";
-
-    @Path("/loginTest")
-    @POST
-    @Produces("application/json")
-    public Response loginTest(String data) {
-
-        User user = new Gson().fromJson(data, User.class);
-
-        int statusCode = 200;
-        if (user.getUsername().equals("siad14ab") && user.getPassword().equals("123")) {
-
-            try {
-                jwtString = Jwts.builder().setSubject(userId).signWith(SignatureAlgorithm.HS256, Config.key).compact();
-                assert Jwts.parser().setSigningKey(Config.key).parseClaimsJwt(jwtString).getBody().getSubject().equals(userId);
-            } catch (ExpiredJwtException e) {
-                e.printStackTrace();
-            } catch (UnsupportedJwtException e) {
-                e.printStackTrace();
-            } catch (MalformedJwtException e) {
-                e.printStackTrace();
-            } catch (SignatureException e) {
-                e.printStackTrace();
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-            }
-
-        }
-
-        return Response
-                .status(statusCode)
-                .entity("{\"response\":\"login successful\"}")
-                .header("Access-Control-Allow-Origin", "*")
-                .header("authorization", jwtString)
-                .build();
-
-    }
-
-    @Path("/key/")
-    @GET
-    @Produces("application/json")
-    public Response getKey(@HeaderParam("authorization") String authorization){
-
-        int statusCode;
-        String data;
-        Jwt jwt = null;
-        System.out.println(authorization);
-        System.out.println(Config.key.getEncoded().toString());
-        try {
-
-
-            jwt = Jwts.parser().setSigningKey(Config.key).parse(authorization);
-            statusCode = 200;
-
-            data = "{\"response\":\"success\"}";
-
-        } catch (InvalidClaimException | SignatureException | MalformedJwtException e) {
-            e.printStackTrace();
-            data = "{\"response\":\"failure\"}";
-            statusCode = 401;
-        }
-        return Response
-                .status(statusCode)
-                .entity(data)
-                .header("Access-Control-Allow-Origin", "*")
-                .build();
-    }
-
     @POST //"POST-request" er ny data vi kan indtaste for at logge ind.
     @Path("/login/")
     @Produces("application/json")
@@ -94,30 +26,12 @@ public class Api {
 
         int statusCode;
         HashMap<String, String> dataMap = new HashMap<>();
+        String jwtToken = "";
 
         try {
             //Decrypt user
             User user = DataParser.getDecryptedUser(data);
             user.setPassword(Security.hashing(user.getPassword()));
-
-            try {
-                jwtString = Jwts.builder().setSubject(user.getUsername()).signWith(SignatureAlgorithm.HS256, Config.key).compact();
-                assert Jwts.parser().setSigningKey(Config.key).parseClaimsJwt(jwtString).getBody().getSubject().equals(user.getUsername());
-                System.out.println(jwtString);
-
-            } catch (ExpiredJwtException e) {
-
-            } catch (UnsupportedJwtException e) {
-
-            } catch (MalformedJwtException e) {
-
-            } catch (SignatureException e) {
-
-            } catch (IllegalArgumentException e) {
-
-            } catch (IllegalStateException e){
-
-            }
 
             int code = Logic.authenticateUser(user);
 
@@ -135,6 +49,7 @@ public class Api {
                     statusCode = 200;
                     dataMap.put("message", "Login successful");
                     dataMap.put("data", DataParser.getEncryptedDto(user));
+                    jwtToken = JWTProvider.createToken(user);
                     break;
 
                 default:
@@ -151,32 +66,32 @@ public class Api {
         return Response
                 .status(statusCode)
                 .entity(new Gson().toJson(dataMap))
-                .header("authorization", jwtString)
+                .header("authorization", jwtToken)
                 .header("Access-Control-Allow-Headers", "*")
                 .build();
 
     }
 
     @GET //"GET-request"
-    @Path("/users/{userid}") //USER-path - identifice det inden for metoden
+    @Path("/users/") //USER-path - identifice det inden for metoden
     @Produces("application/json")
     public Response getAllUsers(@HeaderParam("authorization") String authorization) {
 
         int statusCode;
         String message;
-        Jwt jwt = null;
 
         System.out.println(authorization);
 
         ArrayList<User> users = null;
+
         try {
 
-            jwt = Jwts.parser().setSigningKey(Config.key).parse(authorization);
-            System.out.println(jwt.getBody());
+            JWTProvider.validateToken(authorization);
             statusCode = 200;
 
             //TODO change maybe?
-            users = Logic.getEncryptedUsers(0);
+            users = Logic.getEncryptedUsers(JWTProvider.getUserId(authorization), 1);
+//            users = Logic.getEncryptedUsers(JWTProvider.getUserId(authorization), 1);
 
             return Response
                     .status(statusCode)
@@ -184,14 +99,23 @@ public class Api {
                     .header("Access-Control-Allow-Origin", "*")
                     .build();
 
-        } catch (InvalidClaimException | SignatureException | MalformedJwtException e) {
+        }
+        catch (InvalidClaimException | SignatureException | MalformedJwtException e) {
             e.printStackTrace();
-            message = "{\"message\":\"failure\"}";
-            statusCode = 401;
+
 
             return Response
-                    .status(statusCode)
-                    .entity(message)
+                    .status(401)
+                    .entity("{\"message\":\"failure\"}")
+                    .header("Access-Control-Allow-Origin", "*")
+                    .build();
+
+        }
+        catch (ExpiredJwtException e2){
+
+            return Response
+                    .status(401)
+                    .entity(DataParser.getEncryptedUserList(users))
                     .header("Access-Control-Allow-Origin", "*")
                     .build();
         }
@@ -199,21 +123,30 @@ public class Api {
 
 
     @DELETE //DELETE-request fjernelse af data (bruger): Slet bruger
-    @Path("/users/{userid}")
+    @Path("/users/")
     @Produces("application/json")
-    public Response deleteUser(@PathParam("userid") int userId) {
+    public Response deleteUser(@HeaderParam("authorization") String authorization) {
 
-        int deleteUser = Logic.deleteUser(userId);
         int status;
-        HashMap<String, String> dataMap = new HashMap<>();
+        HashMap<String, String> dataMap = null;
+        try {
+            JWTProvider.validateToken(authorization);
 
-        if (deleteUser == 1) {
+            int deleteUser = Logic.deleteUser(JWTProvider.getUserId(authorization));
+
+            dataMap = new HashMap<>();
+
+            if (deleteUser == 1) {
+                status = 200;
+                dataMap.put("message", "User was deleted");
+
+            } else {
+                status = 400;
+                dataMap.put("message", "Failed. User was not deleted");
+            }
+        } catch (ExpiredJwtException e){
+            e.printStackTrace();
             status = 200;
-            dataMap.put("message", "User was deleted");
-
-        } else {
-            status = 400;
-            dataMap.put("message", "Failed. User was not deleted");
         }
         return Response
                 .status(status)
@@ -280,22 +213,30 @@ public class Api {
     }
 
     @GET //"GET-request"
-    @Path("/users/id/{userId}")
+    @Path("/users/id/")
     @Produces("application/json")
     // JSON: {"userId": [userid]}
-    public Response getUser(@PathParam("userId") int userId) {
+    public Response getUser(@HeaderParam("authorization") String authorization) {
+
 
         int statusCode;
         String sendingToClient;
-        User user = Logic.getUser(userId);
-        //udprint/hent/identificer af data omkring spillere
-        if (user != null) {
+        User user = null;
+
+        try {
+            user = Logic.getUser(JWTProvider.getUserId(authorization));
+            //udprint/hent/identificer af data omkring spillere
+            if (user != null) {
+                statusCode = 200;
+                sendingToClient = DataParser.getEncryptedDto(user);
+            } else {
+                statusCode = 400;
+                sendingToClient = "{\"message\":\"User was not found\"}";
+            }
+        } catch (ExpiredJwtException e) {
+            e.printStackTrace();
             statusCode = 200;
             sendingToClient = DataParser.getEncryptedDto(user);
-        }
-        else {
-            statusCode = 400;
-            sendingToClient = "{\"message\":\"User was not found\"}";
         }
         return Response
                 .status(statusCode)
@@ -354,7 +295,7 @@ public class Api {
             }
             else {
                 statusCode = 400;
-                sendingToClient = "{\"message\":\"Game closed\"}";
+                sendingToClient = "{\"message\":\"You can't join this game. Game is closed\"}";
             }
         }
         catch (JsonSyntaxException | NullPointerException e) {
@@ -384,7 +325,7 @@ public class Api {
 
             if (game != null) {
                 statusCode = 201;
-                sendingToClient = DataParser.getEncryptedDto(game);
+                sendingToClient = "{\"message\":\"Game was played. See results in the replayer\"}";
             }
             else {
                 statusCode = 400;
@@ -404,9 +345,11 @@ public class Api {
     }
 
     @DELETE //DELETE-request fjernelse af data(spillet slettes)
-    @Path("/games/{gameid}")
+    @Path("/games/")
     @Produces("application/json")
-    public Response deleteGame(@PathParam("gameid") int gameId) {
+    public Response deleteGame(@HeaderParam("authorization") String authorization, int gameId) {
+
+        JWTProvider.validateToken(authorization);
 
         int deleteGame = Logic.deleteGame(gameId);
         int statusCode;
@@ -523,7 +466,7 @@ public class Api {
         }
 
         return Response
-                .status(201)
+                .status(200)
                 .entity(DataParser.getEncryptedGameList(games))
                 .header("Access-Control-Allow-Origin", "*")
                 .build();
@@ -542,7 +485,7 @@ public class Api {
         ArrayList<Score> score = Logic.getScoresByUserID(userid);
 
         return Response
-                .status(201)
+                .status(200)
                 .entity(DataParser.getEncryptedScoreList(score))
                 .header("Access-Control-Allow-Origin", "*")
                 .build();

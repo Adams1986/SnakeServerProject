@@ -173,7 +173,12 @@ public class DatabaseDriver {
 
     public String getSQLHighScores(){
 
-        return "SELECT username, score, game_id, name, host_controls, opponent_controls FROM scores INNER JOIN games ON game_id = games.id INNER JOIN users ON user_id = users.id ORDER BY score DESC LIMIT 25;";
+        return "SELECT username, score, game_id, map_size, name, host_controls, opponent_controls " +
+                "FROM scores " +
+                "INNER JOIN games ON game_id = games.id " +
+                "INNER JOIN users ON user_id = users.id " +
+                "ORDER BY score " +
+                "DESC LIMIT 15;";
     }
 
     //Used for returning a specific users finished games with scores
@@ -186,4 +191,8 @@ public class DatabaseDriver {
         return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE host = ? AND (games.status = 'open' OR games.status = 'pending');";
     }
 
+    public String getSqlRecordsUsers() {
+
+        return "SELECT * FROM users WHERE id != ? AND status = 'active' AND type = ?;";
+    }
 }

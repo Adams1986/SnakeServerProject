@@ -203,27 +203,24 @@ public class DatabaseWrapper {
      *
      * @return
      */
-    public ArrayList<User> getUsers(int userId) {
+    public ArrayList<User> getUsers(int userId, int userType) {
         ResultSet resultSet = null;
         PreparedStatement ps;
         User user = null;
         ArrayList<User> result = null;
 
         try {
-            ps = connection.prepareStatement(dbDriver.getSqlRecords("users"));
-            resultSet = ps.executeQuery();
+            ps = connection.prepareStatement(dbDriver.getSqlRecordsUsers());
+            ps.setInt(1, userId);
+            ps.setInt(2, userType);
 
+            resultSet = ps.executeQuery();
 
             result = new ArrayList<>();
 
             // Indlaeser brugere i arrayListen
             while (resultSet.next()) {
 
-                if (!resultSet.getString("status").equals("deleted") &&
-                        resultSet.getType()!=0) {
-
-                    //userId allows getUsers to be used by client to invite other users without showing on list
-                    if (userId != resultSet.getInt("id")) {
 
                         user = new User();
 
@@ -250,8 +247,8 @@ public class DatabaseWrapper {
                         }
 
                         result.add(user);
-                    }
-                }
+
+
             }
 
         } catch (SQLException e) {
@@ -738,6 +735,7 @@ public class DatabaseWrapper {
                 Game game = new Game();
                 game.setName(resultSet.getString("name"));
                 game.setGameId(resultSet.getInt("game_id"));
+                game.setMapSize(resultSet.getInt("map_size"));
 
                 Score score = new Score();
                 score.setGame(game);

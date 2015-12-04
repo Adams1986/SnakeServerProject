@@ -3,7 +3,6 @@ package model;
 //import org.codehaus.jettison.json.JSONException;
 //import org.codehaus.jettison.json.JSONObject;
 
-import io.jsonwebtoken.impl.crypto.MacProvider;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -21,7 +20,9 @@ public class Config {
     private static String hashingSalt;
     private static String encryptionkey;
     private static int serverPort;
-    public static final Key key = MacProvider.generateKey();
+    private static String secret;
+    private static String tokenIssuer;
+    private static String tokenId;
 
     // Create init-method to read from the config.json file
     // and parse it to the variables in the class.
@@ -56,6 +57,10 @@ public class Config {
             setHashingSalt((String) jsonObject.get("hashingSalt"));
 
             setServerPort((int)(long) jsonObject.get("serverport"));
+
+            setSecret((String) jsonObject.get("key"));
+            setTokenId((String) jsonObject.get("tokenid"));
+            setTokenIssuer((String) jsonObject.get("tokenissuer"));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -121,5 +126,29 @@ public class Config {
 
     public static int getServerPort() {
         return serverPort;
+    }
+
+    public static String getSecret() {
+        return secret;
+    }
+
+    public static void setSecret(String secret) {
+        Config.secret = secret;
+    }
+
+    public static String getTokenIssuer() {
+        return tokenIssuer;
+    }
+
+    public static void setTokenIssuer(String tokenIssuer) {
+        Config.tokenIssuer = tokenIssuer;
+    }
+
+    public static String getTokenId() {
+        return tokenId;
+    }
+
+    public static void setTokenId(String tokenId) {
+        Config.tokenId = tokenId;
     }
 }
