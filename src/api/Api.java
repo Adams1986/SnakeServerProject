@@ -3,7 +3,6 @@ package api;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import controller.DataParser;
 import controller.JWTProvider;
@@ -65,7 +64,7 @@ public class Api {
 
         return Response
                 .status(statusCode)
-                .entity(new Gson().toJson(dataMap))
+                .entity(DataParser.hashMapToJson(dataMap))
                 .header("authorization", jwtToken)
                 .header("Access-Control-Allow-Headers", "*")
                 .build();
@@ -75,23 +74,17 @@ public class Api {
     @GET //"GET-request"
     @Path("/users/") //USER-path - identifice det inden for metoden
     @Produces("application/json")
-    public Response getAllUsers(@HeaderParam("authorization") String authorization) {
+    public Response getAllUsers(@HeaderParam("authorization") String authorization, @HeaderParam("headerData")String headerData) {
 
         int statusCode;
-        String message;
-
-        System.out.println(authorization);
 
         ArrayList<User> users = null;
 
+        JWTProvider.validateToken(authorization);
+
         try {
-
-            JWTProvider.validateToken(authorization);
             statusCode = 200;
-
-            //TODO change maybe?
-            users = Logic.getEncryptedUsers(JWTProvider.getUserId(authorization), 1);
-//            users = Logic.getEncryptedUsers(JWTProvider.getUserId(authorization), 1);
+            users = Logic.getEncryptedUsers(Integer.parseInt(headerData), 1);
 
             return Response
                     .status(statusCode)
@@ -103,19 +96,9 @@ public class Api {
         catch (InvalidClaimException | SignatureException | MalformedJwtException e) {
             e.printStackTrace();
 
-
             return Response
                     .status(401)
                     .entity("{\"message\":\"failure\"}")
-                    .header("Access-Control-Allow-Origin", "*")
-                    .build();
-
-        }
-        catch (ExpiredJwtException e2){
-
-            return Response
-                    .status(401)
-                    .entity(DataParser.getEncryptedUserList(users))
                     .header("Access-Control-Allow-Origin", "*")
                     .build();
         }
@@ -125,14 +108,15 @@ public class Api {
     @DELETE //DELETE-request fjernelse af data (bruger): Slet bruger
     @Path("/users/")
     @Produces("application/json")
-    public Response deleteUser(@HeaderParam("authorization") String authorization) {
+    public Response deleteUser(@HeaderParam("authorization") String authorization, @HeaderParam("headerData")String headerData) {
+
+        String message = JWTProvider.validateToken(authorization);
 
         int status;
-        HashMap<String, String> dataMap = null;
-        try {
-            JWTProvider.validateToken(authorization);
 
-            int deleteUser = Logic.deleteUser(JWTProvider.getUserId(authorization));
+        HashMap<String, String> dataMap = null;
+
+            int deleteUser = Logic.deleteUser(Integer.parseInt(headerData));
 
             dataMap = new HashMap<>();
 
@@ -144,13 +128,10 @@ public class Api {
                 status = 400;
                 dataMap.put("message", "Failed. User was not deleted");
             }
-        } catch (ExpiredJwtException e){
-            e.printStackTrace();
-            status = 200;
-        }
+
         return Response
                 .status(status)
-                .entity(new Gson().toJson(dataMap))
+                .entity(DataParser.hashMapToJson(dataMap))
                 .header("Access-Control-Allow-Headers", "*")
                 .build();
     }
@@ -207,7 +188,7 @@ public class Api {
 
         return Response
                 .status(statusCode)
-                .entity(new Gson().toJson(dataMap))
+                .entity(DataParser.hashMapToJson(dataMap))
                 .header("Access-Control-Allow-Headers", "*")
                 .build();
     }
@@ -216,15 +197,16 @@ public class Api {
     @Path("/users/id/")
     @Produces("application/json")
     // JSON: {"userId": [userid]}
-    public Response getUser(@HeaderParam("authorization") String authorization) {
+    public Response getUser(@HeaderParam("authorization") String authorization, @HeaderParam("headerData")String headerData) {
 
+        JWTProvider.validateToken(authorization);
 
         int statusCode;
         String sendingToClient;
         User user = null;
 
-        try {
-            user = Logic.getUser(JWTProvider.getUserId(authorization));
+
+            user = Logic.getUser(Integer.parseInt(headerData));
             //udprint/hent/identificer af data omkring spillere
             if (user != null) {
                 statusCode = 200;
@@ -233,11 +215,7 @@ public class Api {
                 statusCode = 400;
                 sendingToClient = "{\"message\":\"User was not found\"}";
             }
-        } catch (ExpiredJwtException e) {
-            e.printStackTrace();
-            statusCode = 200;
-            sendingToClient = DataParser.getEncryptedDto(user);
-        }
+
         return Response
                 .status(statusCode)
                 .entity(sendingToClient)
@@ -248,7 +226,9 @@ public class Api {
     @POST //POST-request: Nyt data; nyt spil oprettes
     @Path("/games/")
     @Produces("application/json")
-    public Response createGame(String json) {
+    public Response createGame(@HeaderParam("authorization") String authorization, String json) {
+
+        String validation = JWTProvider.validateToken(authorization);
 
         int statusCode;
         String sendingToClient;
@@ -281,7 +261,9 @@ public class Api {
     @PUT
     @Path("/games/join/")
     @Produces("application/json")
-    public Response joinGame(String json) {
+    public Response joinGame(@HeaderParam("authorization") String authorization, String json) {
+
+        JWTProvider.validateToken(authorization);
 
         String sendingToClient;
         int statusCode;
@@ -315,7 +297,9 @@ public class Api {
     @PUT
     @Path("/games/start/")
     @Produces("application/json")
-    public Response startGame(String json) {
+    public Response startGame(@HeaderParam("authorization") String authorization, String json) {
+
+        JWTProvider.validateToken(authorization);
 
         int statusCode;
         String sendingToClient;
@@ -347,11 +331,21 @@ public class Api {
     @DELETE //DELETE-request fjernelse af data(spillet slettes)
     @Path("/games/")
     @Produces("application/json")
-    public Response deleteGame(@HeaderParam("authorization") String authorization, int gameId) {
+    public Response deleteGame(@HeaderParam("authorization") String authorization, @HeaderParam("headerData")String headerData) {
 
-        JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateToken(authorization);
 
-        int deleteGame = Logic.deleteGame(gameId);
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (!validation.equals("{\"message\": \"Valid token\"}")){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
+
+        int deleteGame = Logic.deleteGame(Integer.parseInt(headerData));
         int statusCode;
         String sendingToClient;
 
@@ -371,11 +365,13 @@ public class Api {
     }
 
     @GET //"GET-request"
-    @Path("/game/{gameid}")
+    @Path("/game/")
     @Produces("application/json")
-    public Response getGame(@PathParam("gameid") int gameid) {
+    public Response getGame(@HeaderParam("authorization") String authorization, @HeaderParam("headerData") String headerData) {
 
-        Game game = Logic.getGame(gameid);
+        JWTProvider.validateToken(authorization);
+
+        Game game = Logic.getGame(Integer.parseInt(headerData));
 
         return Response
                 .status(200)
@@ -387,7 +383,9 @@ public class Api {
     @GET //"GET-request"
     @Path("/scores/")
     @Produces("application/json")
-    public Response getHighscore() {
+    public Response getHighscore(@HeaderParam("authorization") String authorization) {
+
+        JWTProvider.validateToken(authorization);
 
         return Response
                 .status(200)
@@ -400,7 +398,9 @@ public class Api {
     @GET
     @Path("/highscores")
     @Produces("application/json")
-    public Response getHighScores(){
+    public Response getHighScores(@HeaderParam("authorization") String authorization){
+
+        JWTProvider.validateToken(authorization);
 
         ArrayList<Score> highScores = Logic.getHighScores();
 
@@ -415,11 +415,13 @@ public class Api {
     Getting games by userid
      */
     @GET //"GET-request"
-    @Path("/games/{userid}/")
+    @Path("/games/userid/")
     @Produces("application/json")
-    public Response getGamesByUserID(@PathParam("userid") int userId) {
+    public Response getGamesByUserID(@HeaderParam("authorization") String authorization) {
 
-        ArrayList<Game> games = Logic.getGames(DatabaseWrapper.GAMES_BY_ID, userId);
+        JWTProvider.validateToken(authorization);
+
+        ArrayList<Game> games = Logic.getGames(DatabaseWrapper.GAMES_BY_ID, Integer.parseInt(authorization));
 
         return Response
                 .status(200)
@@ -432,13 +434,20 @@ public class Api {
     Getting games by game status and user id
      */
     @GET //"GET-request"
-    @Path("/games/{status}/{userid}")
+    @Path("/games/")
     @Produces("application/json")
-    public Response getGamesByStatusAndUserID(@PathParam("status") String status, @PathParam("userid") int userId) {
+    public Response getGamesByStatusAndUserID(@HeaderParam("authorization") String authorization, @HeaderParam("headerData") String headerData) {
+
+        JWTProvider.validateToken(authorization);
 
         ArrayList<Game> games = null;
+        int userId = DataParser.parseHeaderToInteger(headerData);
+        headerData = DataParser.parseHeaderToString(headerData);
+        System.out.println(headerData);
+//        headerData = DataParser.decryptMessage(headerData);
+//        System.out.println(headerData);
 
-        switch (status) {
+        switch (headerData) {
             case "Pending_games":
                 games = Logic.getGames(DatabaseWrapper.PENDING_BY_ID, userId);
                 break;
@@ -478,11 +487,13 @@ public class Api {
     Used for showing all finished games and scores for the user
      */
     @GET //"GET-request"
-    @Path("/scores/{userid}")
+    @Path("/scores/userid/")
     @Produces("application/json")
-    public Response getScoresByUserID(@PathParam("userid") int userid) {
+    public Response getScoresByUserID(@HeaderParam("authorization") String authorization) {
 
-        ArrayList<Score> score = Logic.getScoresByUserID(userid);
+        JWTProvider.validateToken(authorization);
+
+        ArrayList<Score> score = Logic.getScoresByUserID(Integer.parseInt(authorization));
 
         return Response
                 .status(200)

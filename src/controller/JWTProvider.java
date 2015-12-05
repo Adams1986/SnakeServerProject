@@ -49,26 +49,46 @@ public class JWTProvider {
 
     }
 
-    public static void validateToken(String authorization) {
+    public static String validateToken(String authorization) {
 
-        Claims claims = Jwts.parser()
-                .setSigningKey(DatatypeConverter.parseBase64Binary(Config.getSecret()))
-                .parseClaimsJws(authorization).getBody();
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(DatatypeConverter.parseBase64Binary(Config.getSecret()))
+                    .parseClaimsJws(authorization).getBody();
 
-        System.out.println("ID: " + claims.getId());
-        System.out.println("Subject: " + claims.getSubject());
-        System.out.println("Issuer: " + claims.getIssuer());
-        System.out.println("Expiration: " + claims.getExpiration());
+            System.out.println("ID: " + claims.getId());
+            System.out.println("Subject: " + claims.getSubject());
+            System.out.println("Issuer: " + claims.getIssuer());
+            System.out.println("Expiration: " + claims.getExpiration());
+
+            return "{\"message\": \"Valid token\"}";
+
+        } catch (ExpiredJwtException e) {
+            //TODO: Handle expiration
+            return "{\"message\":\"Your session has expired. Please login again\"}";
+        }
     }
 
+    /**
+     * Will be used to get id when handling expiration is set up properly
+     * @param authorization
+     * @return
+     */
     public static int getUserId(String authorization){
 
-        Claims claims = Jwts.parser()
-                .setSigningKey(DatatypeConverter.parseBase64Binary(Config.getSecret()))
-                .parseClaimsJws(authorization).getBody();
 
-        String [] values = claims.getSubject().split("---");
+        try {
+            Claims claims = Jwts.parser()
+                    .setSigningKey(DatatypeConverter.parseBase64Binary(Config.getSecret()))
+                    .parseClaimsJws(authorization).getBody();
 
-        return Integer.valueOf(values[1]);
+            String [] values = claims.getSubject().split("---");
+
+            return Integer.valueOf(values[1]);
+        }
+        catch (ExpiredJwtException e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 }

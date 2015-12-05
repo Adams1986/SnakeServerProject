@@ -60,27 +60,25 @@ public class DatabaseDriver {
 
     /**
      * Querybuilder with two parameters, which, when specified will get a single record from a specific table.
-     * @param table
      * @return SqlStatement
      */
-    public String getSqlRecord(String table) {
+    public String getSqlRecord() {
 
-        return "select * from " + table + " WHERE id = ? AND status <> 'deleted'";
+        return "select * from ? WHERE id = ? AND status <> 'deleted'";
     }
 
-    public String getSqlRecordWithoutCurrentUser(String table) {
+    public String getSqlRecordWithoutCurrentUser() {
 
-        return "select * from " + table + " WHERE id = ? AND status <> 'deleted'";
+        return "select * from ? WHERE id = ? AND status <> 'deleted'";
     }
 
     /**
      * Querybuilder with a single parameter, which, when specified will get a table.
-     * @param table
      * @return SqlStatement
      */
     public String getSqlRecords(String table) {
 
-        return "select * from " + table;
+        return String.format("select * from %s", table);
     }
 
     /**
@@ -122,7 +120,7 @@ public class DatabaseDriver {
     }
 
     public String deleteSql(String table) {
-        return "UPDATE " + table + " SET status = ? WHERE id = ?";
+        return String.format("UPDATE %s SET status = ? WHERE id = ?", table);
     }
 
     public String getSQLAllGamesByUserID() {

@@ -59,8 +59,9 @@ public class DatabaseWrapper {
         PreparedStatement ps;
 
         try {
-            ps = connection.prepareStatement(dbDriver.getSqlRecord("users"));
-            ps.setInt(1, id);
+            ps = connection.prepareStatement(dbDriver.getSqlRecord());
+            ps.setString(1, "users");
+            ps.setInt(2, id);
             resultSet = ps.executeQuery();
 
             while (resultSet.next()) {
@@ -99,9 +100,10 @@ public class DatabaseWrapper {
 
 
         try {
-            ps = connection.prepareStatement(dbDriver.getSqlRecord("games"));
+            ps = connection.prepareStatement(dbDriver.getSqlRecord());
 
-            ps.setInt(1, id);
+            ps.setString(1, "games");
+            ps.setInt(2, id);
             resultSet = ps.executeQuery();
 
             while (resultSet.next()) {

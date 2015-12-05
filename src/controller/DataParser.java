@@ -11,6 +11,25 @@ import java.util.HashMap;
  */
 public class DataParser {
 
+    public static String parseHeaderToString(String dataToBeParsed){
+
+        String [] values = dataToBeParsed.split("---");
+
+        return values[0];
+    }
+
+    public static int parseHeaderToInteger(String dataToBeParsed){
+
+        String [] values = dataToBeParsed.split("---");
+
+        return Integer.valueOf(values[1]);
+    }
+
+    public static String decryptMessage(String dataToBeEncrypted){
+
+        return Security.decrypt(dataToBeEncrypted, Config.getEncryptionkey());
+    }
+
     //TODO: find suitable place. Maybe make a parser class like on client
     public static String getEncryptedDto(Object o){
 
@@ -82,5 +101,10 @@ public class DataParser {
 
         return gson.fromJson(jsonUser, Game.class);
 
+    }
+
+    public static String hashMapToJson(HashMap<String, String> dataMap) {
+
+        return new Gson().toJson(dataMap);
     }
 }
