@@ -11,14 +11,11 @@ import io.jsonwebtoken.*;
 import java.security.Key;
 import java.util.Date;
 
-/**
- * Created by simonadams on 04/12/15.
- */
+
 public class JWTProvider {
 
-    public static String createToken(User user){
+    public static String createToken(String subject){
 
-        String subject = user.getEmail()+"---"+user.getId();
         String id = Config.getTokenId();
         String issuer = Config.getTokenIssuer();
 
@@ -39,8 +36,8 @@ public class JWTProvider {
 
 
         //set expiration date to two hours from now
-        long expMillis = nowMillis + 60000;
-//        long expMillis = nowMillis + 7200000;
+        long expMillis = nowMillis + Config.getTokenExpirationTime();
+//        long expMillis = nowMillis + 45000;
         Date exp = new Date(expMillis);
         System.out.println(exp);
         builder.setExpiration(exp);

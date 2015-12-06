@@ -9,5 +9,6 @@
 	"serverport": 8888,
 	"key": "coding rocks",
 	"tokenid": "",
-	"tokenissuer": "Team Depardieu"
+	"tokenissuer": "Team Depardieu",
+	"tokenexpiration": 7200000
 }

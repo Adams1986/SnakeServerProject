@@ -62,14 +62,16 @@ public class DatabaseDriver {
      * Querybuilder with two parameters, which, when specified will get a single record from a specific table.
      * @return SqlStatement
      */
-    public String getSqlRecord() {
+    public String getSqlRecord(String table) {
 
-        return "select * from ? WHERE id = ? AND status <> 'deleted'";
+        //Possible threat of SQL injection
+        return String.format("select * from %s WHERE id = ? AND status <> 'deleted'", table);
     }
 
-    public String getSqlRecordWithoutCurrentUser() {
+    public String getSqlRecordWithoutCurrentUser(String table) {
 
-        return "select * from ? WHERE id = ? AND status <> 'deleted'";
+        //Possible threat of SQL injection
+        return String.format("select * from %s WHERE id = ? AND status <> 'deleted'", table);
     }
 
     /**
@@ -78,6 +80,7 @@ public class DatabaseDriver {
      */
     public String getSqlRecords(String table) {
 
+        //Possible threat of SQL injection
         return String.format("select * from %s", table);
     }
 
@@ -86,6 +89,7 @@ public class DatabaseDriver {
      * @return SqlStatement
      */
     public String updateSqlUser(){
+
         return "UPDATE Users SET first_name = ?, last_name = ?, email = ?, password = ?, " +
                 "status = ?, type = ? WHERE id = ?";
     }
@@ -105,68 +109,121 @@ public class DatabaseDriver {
     }
 
     public String createSqlUser() {
-        return "Insert into users (first_name, last_name, email, username, password, type) " +
-                "values (?, ?, ?, ?, ?, ?)";
+
+        return "INSERT INTO USERS (first_name, last_name, email, username, password, type) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
     }
 
     public String createSqlGame() {
-        return "Insert into games (host, opponent, status, name, host_controls, map_size) " +
-                "values (?, ?, ?, ?, ?, ?)";
+
+        return "INSERT INTO games (host, opponent, status, name, host_controls, map_size) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
     }
 
     public String createSqlScore() {
-        return "Insert into scores (user_id, game_id, score, opponent_id) " +
-                "values (?, ?, ?, ?)";
+
+        return "INSERT INTO scores (user_id, game_id, score, opponent_id) " +
+                "VALUES (?, ?, ?, ?)";
     }
 
     public String deleteSql(String table) {
+
         return String.format("UPDATE %s SET status = ? WHERE id = ?", table);
     }
 
     public String getSQLAllGamesByUserID() {
-        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host INNER JOIN users opponents ON opponents.id = opponent WHERE host = ? OR opponent = ?;";
+
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username " +
+                "FROM games " +
+                "INNER JOIN users hosts ON hosts.id = host " +
+                "INNER JOIN users opponents ON opponents.id = opponent " +
+                "WHERE host = ? OR opponent = ?;";
     }
 
     //Using left outer join for when games are "open". Inner joins not useful as null values will create an empty set. And open games have a lot of null values
     public String getSQLGamesByStatusAndUserID(){
 
-        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username, winners.username AS winner_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent LEFT OUTER JOIN users winners ON winners.id = winner WHERE games.status = ? AND (host = ? OR opponent = ?);";
-        //return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE games.status = ? AND (host = ? OR opponent = ?);";
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username, winners.username AS winner_username " +
+                "FROM games " +
+                "INNER JOIN users hosts ON hosts.id = host " +
+                "LEFT OUTER JOIN users opponents ON opponents.id = opponent " +
+                "LEFT OUTER JOIN users winners ON winners.id = winner " +
+                "WHERE games.status = ? " +
+                "AND (host = ? OR opponent = ?);";
     }
 
     public String getSQLOpenGames() {
-        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE games.status = 'open'";
+
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username " +
+                "FROM games " +
+                "INNER JOIN users hosts ON hosts.id = host " +
+                "LEFT OUTER JOIN users opponents ON opponents.id = opponent " +
+                "WHERE games.status = 'open'";
     }
 
     public String getSQLOpenGamesByOtherUsers(){
 
-        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM Games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE games.status = 'open' AND host != ?";
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username " +
+                "FROM Games " +
+                "INNER JOIN users hosts ON hosts.id = host " +
+                "LEFT OUTER JOIN users opponents ON opponents.id = opponent " +
+                "WHERE games.status = 'open' " +
+                "AND host != ?";
     }
 
     public String getSQLGamesInvitedByUserID() {
-        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host INNER JOIN users opponents ON opponents.id = opponent WHERE games.status = 'pending' and opponent = ?";
+
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username " +
+                "FROM games " +
+                "INNER JOIN users hosts ON hosts.id = host " +
+                "INNER JOIN users opponents ON opponents.id = opponent " +
+                "WHERE games.status = 'pending' " +
+                "AND opponent = ?";
     }
 
     public String getSQLGamesHostedByUserID(){
-        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE games.status != 'finished' AND host = ?";
+
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username " +
+                "FROM games " +
+                "INNER JOIN users hosts ON hosts.id = host " +
+                "LEFT OUTER JOIN users opponents ON opponents.id = opponent " +
+                "WHERE games.status != 'deleted' " +
+                "AND host = ?";
     }
 
     public String authenticatedSql() {
-        return "Select users.*, sum(scores.score) as TotalScore from users " +
-                "join scores where users.id = scores.user_id AND username = ? AND status <> 'deleted'";
+
+        return "SELECT users.*, SUM(scores.score) as TotalScore " +
+                "FROM users " +
+                "JOIN scores " +
+                "WHERE users.id = scores.user_id " +
+                "AND username = ? " +
+                "AND status <> 'deleted'";
     }
 
     public String getSqlHighScore() {
-        return "select users.*, sum(scores.score) as TotalScore from users " +
-                "join scores where users.id = scores.user_id group by users.username order by TotalScore desc";
+
+        return "SELECT users.*, SUM(scores.score) as TotalScore " +
+                "FROM users " +
+                "JOIN scores where users.id = scores.user_id " +
+                "GROUP BY users.username " +
+                "ORDER BY TotalScore desc";
     }
 
     public String getScoresByUserID() {
-        return " select * from scores where user_id = ?";
+
+        return " SELECT * " +
+                "FROM scores " +
+                "WHERE user_id = ?";
     }
 
     public String getHighScore() {
-        return "select games.id as game_id, games.created, games.opponent, games.name as game_name, scores.id as score_id, scores.user_id as user_id, max(scores.score) as highscore, users.first_name, users.last_name, users.username from scores, users, games where scores.user_id = users.id and scores.game_id = games.id group by user_id order by highscore desc";
+
+        return "SELECT games.id as game_id, games.created, games.opponent, games.name as game_name, scores.id as score_id, scores.user_id as user_id, MAX(scores.score) as highscore, users.first_name, users.last_name, users.username " +
+                "FROM scores, users, games " +
+                "WHERE scores.user_id = users.id and scores.game_id = games.id " +
+                "GROUP BY user_id " +
+                "ORDER BY highscore DESC";
     }
 
     public String getSQLHighScores(){
@@ -181,16 +238,31 @@ public class DatabaseDriver {
 
     //Used for returning a specific users finished games with scores
     public String getSQLAllFinishedGamesByUserID() {
-        return "select games.id, games.name, users.username as opponent_name, users.first_name as opponent_first_name, users.last_name as opponent_last_name, users.id as opponent_id, scores.score, games.winner from scores, games, users where scores.user_id = ? and games.id = scores.game_id and scores.opponent_id = users.id";
+
+        return "SELECT games.id, games.name, users.username as opponent_name, users.first_name as opponent_first_name, users.last_name as opponent_last_name, users.id as opponent_id, scores.score, games.winner " +
+                "FROM scores, games, users " +
+                "WHERE scores.user_id = ? " +
+                "AND games.id = scores.game_id " +
+                "AND scores.opponent_id = users.id";
     }
 
     public String getSQLPendingAndOpenGamesByStatusAndUserID(){
 
-        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username FROM games INNER JOIN users hosts ON hosts.id = host LEFT OUTER JOIN users opponents ON opponents.id = opponent WHERE host = ? AND (games.status = 'open' OR games.status = 'pending');";
+        return "SELECT games.*, hosts.username AS host_username, opponents.username AS opponent_username " +
+                "FROM games " +
+                "INNER JOIN users hosts ON hosts.id = host " +
+                "LEFT OUTER JOIN users opponents ON opponents.id = opponent " +
+                "WHERE host = ? " +
+                "AND (games.status = 'open' " +
+                "OR games.status = 'pending');";
     }
 
     public String getSqlRecordsUsers() {
 
-        return "SELECT * FROM users WHERE id != ? AND status = 'active' AND type = ?;";
+        return "SELECT * " +
+                "FROM users " +
+                "WHERE id != ? " +
+                "AND status = 'active' " +
+                "AND type = ?;";
     }
 }

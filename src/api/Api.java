@@ -48,7 +48,9 @@ public class Api {
                     statusCode = 200;
                     dataMap.put("message", "Login successful");
                     dataMap.put("data", DataParser.getEncryptedDto(user));
-                    jwtToken = JWTProvider.createToken(user);
+                    //if exists, create a new token for user.
+                    String subject = user.getEmail()+"---"+user.getId();
+                    jwtToken = JWTProvider.createToken(subject);
                     break;
 
                 default:
@@ -442,12 +444,10 @@ public class Api {
 
         ArrayList<Game> games = null;
         int userId = DataParser.parseHeaderToInteger(headerData);
-        headerData = DataParser.parseHeaderToString(headerData);
-        System.out.println(headerData);
-//        headerData = DataParser.decryptMessage(headerData);
-//        System.out.println(headerData);
+        String gameStatus = DataParser.parseHeaderToString(headerData);
 
-        switch (headerData) {
+
+        switch (gameStatus) {
             case "Pending_games":
                 games = Logic.getGames(DatabaseWrapper.PENDING_BY_ID, userId);
                 break;

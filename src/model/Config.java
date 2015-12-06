@@ -23,6 +23,7 @@ public class Config {
     private static String secret;
     private static String tokenIssuer;
     private static String tokenId;
+    private static long tokenExpirationTime;
 
     // Create init-method to read from the config.json file
     // and parse it to the variables in the class.
@@ -61,6 +62,7 @@ public class Config {
             setSecret((String) jsonObject.get("key"));
             setTokenId((String) jsonObject.get("tokenid"));
             setTokenIssuer((String) jsonObject.get("tokenissuer"));
+            setTokenExpirationTime((long) jsonObject.get("tokenexpiration"));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -150,5 +152,13 @@ public class Config {
 
     public static void setTokenId(String tokenId) {
         Config.tokenId = tokenId;
+    }
+
+    public static long getTokenExpirationTime() {
+        return tokenExpirationTime;
+    }
+
+    public static void setTokenExpirationTime(long tokenExpirationTime) {
+        Config.tokenExpirationTime = tokenExpirationTime;
     }
 }
