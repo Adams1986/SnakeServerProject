@@ -8,7 +8,7 @@
 	"encryptionkey": "123456",
 	"serverport": 8888,
 	"key": "coding rocks",
-	"tokenid": "",
+	"tokenid": "ServerOne",
 	"tokenissuer": "Team Depardieu",
 	"tokenexpiration": 7200000
 }

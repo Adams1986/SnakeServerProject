@@ -9,7 +9,6 @@ import controller.JWTProvider;
 import controller.Logic;
 import controller.Security;
 import database.DatabaseWrapper;
-import io.jsonwebtoken.*;
 import model.*;
 
 import javax.ws.rs.*;
@@ -31,6 +30,7 @@ public class Api {
             //Decrypt user
             User user = DataParser.getDecryptedUser(data);
             user.setPassword(Security.hashing(user.getPassword()));
+            System.out.println(Security.hashing("1234"));
 
             int code = Logic.authenticateUser(user);
 
@@ -78,11 +78,24 @@ public class Api {
     @Produces("application/json")
     public Response getAllUsers(@HeaderParam("authorization") String authorization, @HeaderParam("headerData")String headerData) {
 
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
+
         int statusCode;
 
         ArrayList<User> users = null;
-
-        JWTProvider.validateToken(authorization);
 
         try {
             statusCode = 200;
@@ -95,13 +108,14 @@ public class Api {
                     .build();
 
         }
-        catch (InvalidClaimException | SignatureException | MalformedJwtException e) {
-            e.printStackTrace();
+        catch (NumberFormatException e) {
+            //e.printStackTrace();
 
             return Response
                     .status(401)
                     .entity("{\"message\":\"failure\"}")
                     .header("Access-Control-Allow-Origin", "*")
+                    .header("authorization", validation)
                     .build();
         }
     }
@@ -112,7 +126,20 @@ public class Api {
     @Produces("application/json")
     public Response deleteUser(@HeaderParam("authorization") String authorization, @HeaderParam("headerData")String headerData) {
 
-        String message = JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
 
         int status;
 
@@ -135,6 +162,7 @@ public class Api {
                 .status(status)
                 .entity(DataParser.hashMapToJson(dataMap))
                 .header("Access-Control-Allow-Headers", "*")
+                .header("authorization", validation)
                 .build();
     }
 
@@ -201,7 +229,20 @@ public class Api {
     // JSON: {"userId": [userid]}
     public Response getUser(@HeaderParam("authorization") String authorization, @HeaderParam("headerData")String headerData) {
 
-        JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
 
         int statusCode;
         String sendingToClient;
@@ -222,6 +263,7 @@ public class Api {
                 .status(statusCode)
                 .entity(sendingToClient)
                 .header("Access-Control-Allow-Origin", "*")
+                .header("authorization", validation)
                 .build();
     }
 
@@ -230,7 +272,20 @@ public class Api {
     @Produces("application/json")
     public Response createGame(@HeaderParam("authorization") String authorization, String json) {
 
-        String validation = JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
 
         int statusCode;
         String sendingToClient;
@@ -253,10 +308,12 @@ public class Api {
             statusCode = 400;
             sendingToClient = "{\"message\":\"Error in JSON\"}";
         }
+        System.out.println(validation);
         return Response
                 .status(statusCode)
                 .entity(sendingToClient)
                 .header("Access-Control-Allow-Headers", "*")
+                .header("authorization", validation)
                 .build();
     }
 
@@ -265,7 +322,20 @@ public class Api {
     @Produces("application/json")
     public Response joinGame(@HeaderParam("authorization") String authorization, String json) {
 
-        JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
 
         String sendingToClient;
         int statusCode;
@@ -292,6 +362,7 @@ public class Api {
                 .status(statusCode)
                 .entity(sendingToClient)
                 .header("Access-Control-Allow-Headers", "*")
+                .header("authorization", validation)
                 .build();
     }
 
@@ -301,7 +372,20 @@ public class Api {
     @Produces("application/json")
     public Response startGame(@HeaderParam("authorization") String authorization, String json) {
 
-        JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
 
         int statusCode;
         String sendingToClient;
@@ -327,6 +411,7 @@ public class Api {
                 .status(statusCode)
                 .entity(sendingToClient)
                 .header("Access-Control-Allow-Headers", "*")
+                .header("authorization", validation)
                 .build();
     }
 
@@ -335,10 +420,13 @@ public class Api {
     @Produces("application/json")
     public Response deleteGame(@HeaderParam("authorization") String authorization, @HeaderParam("headerData")String headerData) {
 
-        String validation = JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
 
         //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
-        if (!validation.equals("{\"message\": \"Valid token\"}")){
+        if (isNotValid){
 
             return Response
                     .status(401)
@@ -363,6 +451,7 @@ public class Api {
                 .status(statusCode)
                 .entity(sendingToClient)
                 .header("Access-Control-Allow-Headers", "*")
+                .header("authorization", validation)
                 .build();
     }
 
@@ -371,7 +460,20 @@ public class Api {
     @Produces("application/json")
     public Response getGame(@HeaderParam("authorization") String authorization, @HeaderParam("headerData") String headerData) {
 
-        JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
 
         Game game = Logic.getGame(Integer.parseInt(headerData));
 
@@ -379,6 +481,7 @@ public class Api {
                 .status(200)
                 .entity(DataParser.getEncryptedDto(game))
                 .header("Access-Control-Allow-Origin", "*")
+                .header("authorization", validation)
                 .build();
     }
 
@@ -387,12 +490,26 @@ public class Api {
     @Produces("application/json")
     public Response getHighscore(@HeaderParam("authorization") String authorization) {
 
-        JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
 
         return Response
                 .status(200)
                 .entity(DataParser.getEncryptedScoreList(Logic.getHighscore()))
                 .header("Access-Control-Allow-Origin", "*")
+                .header("authorization", validation)
                 .build();
 
     }
@@ -402,14 +519,31 @@ public class Api {
     @Produces("application/json")
     public Response getHighScores(@HeaderParam("authorization") String authorization){
 
-        JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
 
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
+
+
+        //if get passed the if statement, token was valid and has been removed. So validation now has new token
+        // - token sent as header
         ArrayList<Score> highScores = Logic.getHighScores();
 
         return Response
                 .status(200)
                 .entity(DataParser.getEncryptedScoreList(highScores))
                 .header("Access-Control-Allow-Origin", "*")
+                .header("authorization", validation)
                 .build();
     }
 
@@ -421,7 +555,20 @@ public class Api {
     @Produces("application/json")
     public Response getGamesByUserID(@HeaderParam("authorization") String authorization) {
 
-        JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
 
         ArrayList<Game> games = Logic.getGames(DatabaseWrapper.GAMES_BY_ID, Integer.parseInt(authorization));
 
@@ -429,6 +576,7 @@ public class Api {
                 .status(200)
                 .entity(DataParser.getEncryptedGameList(games))
                 .header("Access-Control-Allow-Origin", "*")
+                .header("authorization", validation)
                 .build();
     }
 
@@ -440,7 +588,20 @@ public class Api {
     @Produces("application/json")
     public Response getGamesByStatusAndUserID(@HeaderParam("authorization") String authorization, @HeaderParam("headerData") String headerData) {
 
-        JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
 
         ArrayList<Game> games = null;
         int userId = DataParser.parseHeaderToInteger(headerData);
@@ -478,6 +639,7 @@ public class Api {
                 .status(200)
                 .entity(DataParser.getEncryptedGameList(games))
                 .header("Access-Control-Allow-Origin", "*")
+                .header("authorization", validation)
                 .build();
     }
 
@@ -491,7 +653,20 @@ public class Api {
     @Produces("application/json")
     public Response getScoresByUserID(@HeaderParam("authorization") String authorization) {
 
-        JWTProvider.validateToken(authorization);
+        String validation = JWTProvider.validateAndRenewToken(authorization);
+
+        boolean isNotValid = validation.equals("{\"message\":\"Your session has expired. Please login again\"}") ||
+                validation.equals("{\"message\":\"Access denied\"}");
+
+        //returns response with status 401 - Unauthorized if token has expired. New token is needed to access deletion of games
+        if (isNotValid){
+
+            return Response
+                    .status(401)
+                    .entity(validation)
+                    .header("Access-Control-Allow-Headers", "*")
+                    .build();
+        }
 
         ArrayList<Score> score = Logic.getScoresByUserID(Integer.parseInt(authorization));
 
@@ -499,6 +674,7 @@ public class Api {
                 .status(200)
                 .entity(DataParser.getEncryptedScoreList(score))
                 .header("Access-Control-Allow-Origin", "*")
+                .header("authorization", validation)
                 .build();
     }
 }
