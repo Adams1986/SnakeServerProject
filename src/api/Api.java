@@ -30,7 +30,6 @@ public class Api {
             //Decrypt user
             User user = DataParser.getDecryptedUser(data);
             user.setPassword(Security.hashing(user.getPassword()));
-            System.out.println(Security.hashing("1234"));
 
             int code = Logic.authenticateUser(user);
 

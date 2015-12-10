@@ -13,6 +13,11 @@ import java.util.Date;
 
 public class JWTProvider {
 
+    /**
+     * Method takes the intended subject or payload of the token, creates a new token and returns it as a String.
+     * @param subject
+     * @return
+     */
     public static String createToken(String subject){
 
         String id = Config.getTokenId();
@@ -36,10 +41,7 @@ public class JWTProvider {
 
         //set expiration date to two hours from now
         long expMillis = nowMillis + Config.getTokenExpirationTime();
-        //TODO: remove tester line
-//        long expMillis = nowMillis + 15000;
         Date exp = new Date(expMillis);
-        System.out.println(exp);
         builder.setExpiration(exp);
 
         return builder.compact();
@@ -57,12 +59,6 @@ public class JWTProvider {
             Claims claims = Jwts.parser()
                     .setSigningKey(DatatypeConverter.parseBase64Binary(Config.getSecret()))
                     .parseClaimsJws(authorization).getBody();
-
-            //TODO: remove or comment out
-            System.out.println("ID: " + claims.getId());
-            System.out.println("Subject: " + claims.getSubject());
-            System.out.println("Issuer: " + claims.getIssuer());
-            System.out.println("Expiration: " + claims.getExpiration());
 
             //returning new token if no expiration of token
             return createToken(claims.getSubject());

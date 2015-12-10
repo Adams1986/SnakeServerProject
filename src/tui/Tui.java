@@ -6,7 +6,6 @@ import controller.Logic;
 import controller.Security;
 import database.DatabaseWrapper;
 import model.Game;
-import model.Gamer;
 import model.User;
 
 public class Tui {

@@ -1,6 +1,7 @@
 package controller;
 
 import com.google.gson.Gson;
+import controller.Security;
 import model.*;
 
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public class DataParser {
 
         //decrypt the value inside "data" key, using the Security.decrypt method
         String jsonUser = Security.decrypt(encryptedUser, Config.getEncryptionkey());
-
+        System.out.println(jsonUser);
         //return the decrypted value as a user object, using the gson method fromJson
         return gson.fromJson(jsonUser, User.class);
 
