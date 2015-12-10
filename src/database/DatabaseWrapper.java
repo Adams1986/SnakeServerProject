@@ -209,9 +209,15 @@ public class DatabaseWrapper {
         ArrayList<User> result = null;
 
         try {
-            ps = connection.prepareStatement(dbDriver.getSqlRecordsUsers());
-            ps.setInt(1, userId);
-            ps.setInt(2, userType);
+            if (userType == 1) {
+                ps = connection.prepareStatement(dbDriver.getSqlRecordsUsers());
+                ps.setInt(1, userId);
+                ps.setInt(2, userType);
+            }
+            else {
+                ps = connection.prepareStatement(dbDriver.getSqlRecordsUsersForAdmin());
+
+            }
 
             resultSet = ps.executeQuery();
 

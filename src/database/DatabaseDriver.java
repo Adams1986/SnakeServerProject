@@ -265,4 +265,11 @@ public class DatabaseDriver {
                 "AND status = 'active' " +
                 "AND type = ?;";
     }
+
+    public String getSqlRecordsUsersForAdmin() {
+
+        return "SELECT * " +
+                "FROM users " +
+                "WHERE status = 'active';";
+    }
 }
