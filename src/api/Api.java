@@ -307,7 +307,7 @@ public class Api {
             statusCode = 400;
             sendingToClient = "{\"message\":\"Error in JSON\"}";
         }
-        System.out.println(validation);
+
         return Response
                 .status(statusCode)
                 .entity(sendingToClient)
